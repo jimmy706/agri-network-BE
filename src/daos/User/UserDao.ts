@@ -1,62 +1,46 @@
-import { IUser } from '@entities/User';
+import UserModel, { User } from '@entities/User';
 
 
 
 export interface IUserDao {
-    getOne: (email: string) => Promise<IUser | null>;
-    getAll: () => Promise<IUser[]>;
-    add: (user: IUser) => Promise<void>;
-    update: (user: IUser) => Promise<void>;
+    getOne: (email: string) => Promise<User | null>;
+    getAll: () => Promise<User[]>;
+    add: (user: User) => Promise<User>;
+    update: (user: User) => Promise<void>;
     delete: (id: number) => Promise<void>;
 }
 
 class UserDao implements IUserDao {
 
 
-    /**
-     * @param email
-     */
-    public getOne(email: string): Promise<IUser | null> {
+    public getOne(email: string): Promise<User | null> {
         // TODO
         return Promise.resolve(null);
     }
 
 
-    /**
-     *
-     */
-    public getAll(): Promise<IUser[]> {
-         // TODO
+    public getAll(): Promise<User[]> {
+        // TODO
         return Promise.resolve([]);
     }
 
 
-    /**
-     *
-     * @param user
-     */
-    public async add(user: IUser): Promise<void> {
-         // TODO
+
+    public async add(user: User): Promise<User> {
+        const newUser = new UserModel(user);
+        const savedUser = await newUser.save();
+        return savedUser;
+    }
+
+
+    public async update(user: User): Promise<void> {
+        // TODO
         return Promise.resolve(undefined);
     }
 
 
-    /**
-     *
-     * @param user
-     */
-    public async update(user: IUser): Promise<void> {
-         // TODO
-        return Promise.resolve(undefined);
-    }
-
-
-    /**
-     *
-     * @param id
-     */
     public async delete(id: number): Promise<void> {
-         // TODO
+        // TODO
         return Promise.resolve(undefined);
     }
 }

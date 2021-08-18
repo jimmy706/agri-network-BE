@@ -1,26 +1,29 @@
-export interface IUser {
-    id: number;
-    name: string;
+import { Schema, model } from 'mongoose';
+
+export enum UserType {
+    SUPPLIER = 1,
+    PRODUCER = 2,
+    BUYER = 3
+};
+
+export interface User {
+    firstName: string;
+    lastName: string;
     email: string;
+    avatar?: string;
+    group: string;
+    phoneNumber: string;
 }
 
-class User implements IUser {
+export const UserSchema = new Schema<User>({
+    firstName: { type: String, required: true },
+    lastName: { type: String, required: true },
+    avatar: { type: String, require: false },
+    email: { type: String, require: true },
+    group: { type: String, require: false },
+    phoneNumber: { type: String, require: true }
+});
 
-    public id: number;
-    public name: string;
-    public email: string;
+const UserModel = model<User>('User', UserSchema);
 
-    constructor(nameOrUser: string | IUser, email?: string, id?: number) {
-        if (typeof nameOrUser === 'string') {
-            this.name = nameOrUser;
-            this.email = email || '';
-            this.id = id || -1;
-        } else {
-            this.name = nameOrUser.name;
-            this.email = nameOrUser.email;
-            this.id = nameOrUser.id;
-        }
-    }
-}
-
-export default User;
+export default UserModel;

@@ -10,6 +10,8 @@ import 'express-async-errors';
 import BaseRouter from './routes';
 import logger from '@shared/Logger';
 
+import mongoose from 'mongoose';
+
 const app = express();
 const { BAD_REQUEST } = StatusCodes;
 
@@ -20,7 +22,7 @@ const { BAD_REQUEST } = StatusCodes;
  ***********************************************************************************/
 
 app.use(express.json());
-app.use(express.urlencoded({extended: true}));
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 
 // Show routes called in console during development
@@ -48,16 +50,20 @@ app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
 
 
 /************************************************************************************
- *                              Serve front-end content
+ *                              Mongodb setup
  ***********************************************************************************/
+const { MONGO_USER, MONGO_PASSWORD, MONGO_HOST, MONGO_PORT, MONGO_DB_NAME } = process.env;
 
-const viewsDir = path.join(__dirname, 'views');
-app.set('views', viewsDir);
-const staticDir = path.join(__dirname, 'public');
-app.use(express.static(staticDir));
-app.get('*', (req: Request, res: Response) => {
-    res.sendFile('index.html', {root: viewsDir});
-});
+mongoose.connect(`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONGO_PORT}/${MONGO_DB_NAME}`, {
+    useNewUrlParser: true,
+    useUnifiedTopology: true
+})
+    .then(() => {
+        logger.info(`Conneceted to mongodb to host: ${MONGO_HOST}:${MONGO_PORT}`)
+    })
+    .catch(error => {
+        console.log(error);
+    })
 
-// Export express instance
+
 export default app;

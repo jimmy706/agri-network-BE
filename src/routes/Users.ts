@@ -1,75 +1,42 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response } from 'express';
 
-import UserDao from '@daos/User/UserDao.mock';
-import { paramMissingError } from '@shared/constants';
+import UserDao from '@daos/User/UserDao';
+import { User } from '@entities/User';
 
 const userDao = new UserDao();
 const { BAD_REQUEST, CREATED, OK } = StatusCodes;
 
+interface AddUserRequest extends Request {
+    body: User
+}
 
-
-/**
- * Get all users.
- * 
- * @param req 
- * @param res 
- * @returns 
- */
-export async function getAllUsers(req: Request, res: Response) {
-    const users = await userDao.getAll();
-    return res.status(OK).json({users});
+export function getAllUsers(req: Request, res: Response) {
+    return res.status(OK);
 }
 
 
-/**
- * Add one user.
- * 
- * @param req 
- * @param res 
- * @returns 
- */
-export async function addOneUser(req: Request, res: Response) {
-    const { user } = req.body;
-    if (!user) {
-        return res.status(BAD_REQUEST).json({
-            error: paramMissingError,
-        });
+
+export async function add(req: AddUserRequest, res: Response): Promise<Response> {
+    try {
+        const { firstName, lastName, email, avatar, group, phoneNumber } = req.body;
+        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber });
+        return res.status(CREATED).json(newUser);
     }
-    await userDao.add(user);
-    return res.status(CREATED).end();
+    catch(error) {
+        return res.status(BAD_REQUEST).json(error);
+    }
 }
 
 
-/**
- * Update one user.
- * 
- * @param req 
- * @param res 
- * @returns 
- */
-export async function updateOneUser(req: Request, res: Response) {
-    const { user } = req.body;
-    if (!user) {
-        return res.status(BAD_REQUEST).json({
-            error: paramMissingError,
-        });
-    }
-    user.id = Number(user.id);
-    await userDao.update(user);
+
+export function updateOneUser(req: Request, res: Response) {
+
     return res.status(OK).end();
 }
 
 
-/**
- * Delete one user.
- * 
- * @param req 
- * @param res 
- * @returns 
- */
-export async function deleteOneUser(req: Request, res: Response) {
-    const { id } = req.params;
-    await userDao.delete(Number(id));
+export function deleteOneUser(req: Request, res: Response) {
+
     return res.status(OK).end();
 }

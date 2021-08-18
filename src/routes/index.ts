@@ -1,16 +1,16 @@
 import { Router } from 'express';
-import { getAllUsers, addOneUser, updateOneUser, deleteOneUser } from './Users';
+import { ping } from './Ping';
+import userRouter from './User.router';
 
 
-// User-route
-const userRouter = Router();
-userRouter.get('/all', getAllUsers);
-userRouter.post('/add', addOneUser);
-userRouter.put('/update', updateOneUser);
-userRouter.delete('/delete/:id', deleteOneUser);
 
 
-// Export the base-router
+const pingRouter = Router();
+pingRouter.get('/', ping);
+
+
+// // Export the base-router
 const baseRouter = Router();
 baseRouter.use('/users', userRouter);
+baseRouter.use('/ping', pingRouter);
 export default baseRouter;

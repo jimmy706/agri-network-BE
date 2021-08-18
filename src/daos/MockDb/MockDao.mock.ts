@@ -1,25 +1,25 @@
-import jsonfile from 'jsonfile';
-import { IUser } from '@entities/User';
+// import jsonfile from 'jsonfile';
+// import { IUser } from '@entities/User';
 
 
-interface IDatabase {
-    users: IUser[];
-}
+// interface IDatabase {
+//     users: IUser[];
+// }
 
 
-class MockDaoMock {
+// class MockDaoMock {
 
-    private readonly dbFilePath = 'src/daos/MockDb/MockDb.json';
-
-
-    protected openDb(): Promise<IDatabase> {
-        return jsonfile.readFile(this.dbFilePath) as Promise<IDatabase>;
-    }
+//     private readonly dbFilePath = 'src/daos/MockDb/MockDb.json';
 
 
-    protected saveDb(db: IDatabase): Promise<void> {
-        return jsonfile.writeFile(this.dbFilePath, db);
-    }
-}
+//     protected openDb(): Promise<IDatabase> {
+//         return jsonfile.readFile(this.dbFilePath) as Promise<IDatabase>;
+//     }
 
-export default MockDaoMock;
+
+//     protected saveDb(db: IDatabase): Promise<void> {
+//         return jsonfile.writeFile(this.dbFilePath, db);
+//     }
+// }
+
+// export default MockDaoMock;
