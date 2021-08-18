@@ -19,8 +19,8 @@ export function getAllUsers(req: Request, res: Response) {
 
 export async function add(req: AddUserRequest, res: Response): Promise<Response> {
     try {
-        const { firstName, lastName, email, avatar, group, phoneNumber } = req.body;
-        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber });
+        const { firstName, lastName, email, avatar, group, phoneNumber, type } = req.body;
+        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber, type });
         return res.status(CREATED).json(newUser);
     }
     catch(error) {
