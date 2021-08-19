@@ -6,7 +6,8 @@ export interface Plan {
     to: Date;
     expired: boolean;
     name: string;
-    plantDetails: PlanDetail[]
+    plantDetails: PlanDetail[];
+    owner: string;
 }
 
 export const PlanSchema = new Schema<Plan> ({
@@ -28,6 +29,10 @@ export const PlanSchema = new Schema<Plan> ({
     },
     plantDetails: {
         type: [PlanDetailSchema]
+    },
+    owner: {
+        type: Schema.Types.ObjectId,
+        ref: 'User'
     }
 });
 

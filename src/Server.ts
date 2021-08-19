@@ -1,6 +1,5 @@
 import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
-import path from 'path';
 import helmet from 'helmet';
 
 import express, { NextFunction, Request, Response } from 'express';
@@ -11,6 +10,7 @@ import BaseRouter from './routes';
 import logger from '@shared/Logger';
 
 import mongoose from 'mongoose';
+
 
 const app = express();
 const { BAD_REQUEST } = StatusCodes;
@@ -64,6 +64,8 @@ mongoose.connect(`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONG
     .catch(error => {
         console.log(error);
     })
+
+
 
 
 export default app;

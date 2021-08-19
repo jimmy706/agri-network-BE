@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 
 const { OK } = StatusCodes;
 
-export function ping(req: Request, res: Response) {
+export async function ping(req: Request, res: Response) {
     return res.status((OK)).json({
         message: "Success!!"
     });

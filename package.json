@@ -65,13 +65,15 @@
     "dotenv": "^10.0.0",
     "express": "^4.17.1",
     "express-async-errors": "^3.1.1",
+    "firebase-admin": "^9.11.0",
     "helmet": "^4.6.0",
     "http-status-codes": "^2.1.4",
     "jet-logger": "^1.0.6",
     "jsonfile": "^6.1.0",
     "module-alias": "^2.2.2",
     "mongoose": "^5.13.7",
-    "morgan": "^1.10.0"
+    "morgan": "^1.10.0",
+    "neo4j-driver": "^4.3.3"
   },
   "devDependencies": {
     "@types/command-line-args": "^5.2.0",
