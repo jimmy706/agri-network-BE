@@ -114,4 +114,4 @@ dist
 .pnp.*
 
 # Firebase config ignore
-firebase-admin.json
+firebase-admin-cre.json
