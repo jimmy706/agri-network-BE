@@ -62,7 +62,7 @@ mongoose.connect(`mongodb://${MONGO_USER}:${MONGO_PASSWORD}@${MONGO_HOST}:${MONG
         logger.info(`Conneceted to mongodb to host: ${MONGO_HOST}:${MONGO_PORT}`)
     })
     .catch(error => {
-        console.log(error);
+        logger.err(error);
     })
 
 

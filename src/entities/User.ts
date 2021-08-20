@@ -14,6 +14,8 @@ export interface User {
     group: string;
     phoneNumber: string;
     type: UserType;
+    password?: string;
+    username: string;
 }
 
 export const UserSchema = new Schema<User>({
@@ -29,7 +31,8 @@ export const UserSchema = new Schema<User>({
             UserType.BUYER,
             UserType.SUPPLIER
         ], require: true, default: UserType.PRODUCER
-    }
+    },
+    username: { type: String, require: true, unique: true },
 });
 
 const UserModel = model<User>('User', UserSchema);

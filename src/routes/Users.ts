@@ -1,7 +1,7 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response } from 'express';
 
-import UserDao from '@daos/User/UserDao';
+import UserDao from '@daos/UserDao';
 import { User } from '@entities/User';
 
 const userDao = new UserDao();
@@ -11,16 +11,17 @@ interface AddUserRequest extends Request {
     body: User
 }
 
-export function getAllUsers(req: Request, res: Response) {
-    return res.status(OK);
+export async function getAll(req: Request, res: Response): Promise<Response> {
+    const result = await userDao.getAll();
+    return res.status(OK).json(result);
 }
 
 
 
 export async function add(req: AddUserRequest, res: Response): Promise<Response> {
     try {
-        const { firstName, lastName, email, avatar, group, phoneNumber, type } = req.body;
-        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber, type });
+        const { firstName, lastName, email, avatar, group, phoneNumber, type, username } = req.body;
+        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber, type, username });
         return res.status(CREATED).json(newUser);
     }
     catch(error) {
