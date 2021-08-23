@@ -1,4 +1,5 @@
 import { model, Schema } from 'mongoose';
+import { Comment, CommentSchema } from './Comment';
 
 export enum PostFormat {
     REGULAR = 'REGULAR',
@@ -9,10 +10,11 @@ export enum PostFormat {
 export interface Post {
     content: string;
     postedBy: string;
-    reactions: [string];
+    reactions: string[];
     lastModified: Date;
     format: PostFormat;
     ref: any;
+    comments: Comment[]
 }
 
 export const PostSchema = new Schema<Post>({
@@ -41,7 +43,8 @@ export const PostSchema = new Schema<Post>({
     ref: {
         require: false,
         type: Schema.Types.Mixed
-    }
+    },
+    comments: [CommentSchema]
 });
 
 const PostModel = model<Post>('Post', PostSchema);
