@@ -1,5 +1,6 @@
 import UserModel, { User } from '@entities/User';
 import FirebaseUser from 'src/@types/express/FireBaseUser';
+import {runNeo4jQuery, createNeo4jTransaction} from 'src/config/neo4j';
 import FirebaseDao from './FirebaseDao';
 
 export interface IUserDao {
@@ -39,6 +40,12 @@ class UserDao implements IUserDao {
             passwordHash: Buffer.from(password || 'b1709272'),
             email,
         }
+        const queryAddUserNode = `CREATE (u:User {name: $name, username: $username}) RETURN u`;
+        const queryParam = {
+            name: `${firstName} ${lastName}`,
+            username
+        };
+        await createNeo4jTransaction(queryAddUserNode, queryParam);
         if(avatar) {
             firebaseImporedUser.photoURL = avatar;
         }
