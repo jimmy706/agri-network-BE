@@ -5,7 +5,7 @@ import UserDao from '@daos/UserDao';
 import { User } from '@entities/User';
 
 const userDao = new UserDao();
-const { BAD_REQUEST, CREATED, OK } = StatusCodes;
+const { BAD_REQUEST, CREATED, OK, UNAUTHORIZED } = StatusCodes;
 
 interface AddUserRequest extends Request {
     body: User
@@ -26,6 +26,18 @@ export async function add(req: AddUserRequest, res: Response): Promise<Response>
     }
     catch(error) {
         return res.status(BAD_REQUEST).json(error);
+    }
+}
+
+export async function login(req: Request, res: Response):Promise<Response> {
+    try {
+        const { idToken } = req.body;
+        const result = await userDao.login(idToken);
+
+        return res.status(OK).json(result);
+    }
+    catch(error) {
+        return res.status(UNAUTHORIZED).json(error);
     }
 }
 

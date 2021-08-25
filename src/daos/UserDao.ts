@@ -1,4 +1,5 @@
 import UserModel, { User } from '@entities/User';
+import { auth } from 'firebase-admin';
 import FirebaseUser from 'src/@types/express/FireBaseUser';
 import {runNeo4jQuery, createNeo4jTransaction} from 'src/config/neo4j';
 import FirebaseDao from './FirebaseDao';
@@ -9,6 +10,7 @@ export interface IUserDao {
     add: (user: User) => Promise<User>;
     update: (user: User) => Promise<void>;
     delete: (id: string) => Promise<void>;
+    login: (idToken: string) => Promise<auth.DecodedIdToken>;
 }
 
 const firebaseDao = new FirebaseDao();
@@ -54,6 +56,11 @@ class UserDao implements IUserDao {
             throw importUserResult.errors[0].error.message;
         }
         return savedUser;
+    }
+
+    public async login(idToken: string): Promise<auth.DecodedIdToken> {
+        const result = await firebaseDao.verifyIdToken(idToken);
+        return result;
     }
 
 
