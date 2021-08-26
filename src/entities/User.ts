@@ -1,9 +1,9 @@
 import { Schema, model } from 'mongoose';
 
 export enum UserType {
-    SUPPLIER = "SUPPLIER",
-    PRODUCER = "PRODUCER",
-    BUYER = "BUYER"
+    SUPPLIER = "Nhà cung cấp",
+    PRODUCER = "Hộ sản xuất",
+    BUYER = "Người thu mua"
 };
 
 export interface User {
@@ -14,8 +14,6 @@ export interface User {
     group: string;
     phoneNumber: string;
     type: UserType;
-    password?: string;
-    username: string;
 }
 
 export const UserSchema = new Schema<User>({
@@ -32,7 +30,6 @@ export const UserSchema = new Schema<User>({
             UserType.SUPPLIER
         ], require: true, default: UserType.PRODUCER
     },
-    username: { type: String, require: true, unique: true },
 });
 
 const UserModel = model<User>('User', UserSchema);

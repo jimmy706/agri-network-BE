@@ -1,7 +1,7 @@
 import UserModel, { User } from '@entities/User';
 import { auth } from 'firebase-admin';
 import FirebaseUser from 'src/@types/express/FireBaseUser';
-import {runNeo4jQuery, createNeo4jTransaction} from 'src/config/neo4j';
+import { runNeo4jQuery, createNeo4jTransaction } from 'src/config/neo4j';
 import FirebaseDao from './FirebaseDao';
 
 export interface IUserDao {
@@ -34,27 +34,14 @@ class UserDao implements IUserDao {
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
         const savedUser = await newUser.save();
-        const { username, password, firstName, lastName, avatar, phoneNumber, email } = savedUser;
-        const firebaseImporedUser: FirebaseUser = {
-            uid: username,
-            displayName: `${firstName} ${lastName}`,
-            phoneNumber,
-            passwordHash: Buffer.from(password || 'b1709272'),
-            email,
-        }
-        const queryAddUserNode = `CREATE (u:User {name: $name, username: $username}) RETURN u`;
+        const { firstName, lastName, email } = savedUser;
+
+        const queryAddUserNode = `CREATE (u:User {name: $name, email: $email}) RETURN u`;
         const queryParam = {
             name: `${firstName} ${lastName}`,
-            username
+            email
         };
         await createNeo4jTransaction(queryAddUserNode, queryParam);
-        if(avatar) {
-            firebaseImporedUser.photoURL = avatar;
-        }
-        const importUserResult = await firebaseDao.importUsers([firebaseImporedUser]);
-        if(importUserResult && importUserResult.errors && importUserResult.errors.length > 0) {
-            throw importUserResult.errors[0].error.message;
-        }
         return savedUser;
     }
 
@@ -71,7 +58,7 @@ class UserDao implements IUserDao {
 
 
     public async delete(id: string): Promise<void> {
-        UserModel.deleteOne({_id: id})
+        UserModel.deleteOne({ _id: id })
     }
 }
 
