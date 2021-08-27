@@ -1,9 +1,15 @@
 import { Schema, model } from 'mongoose';
 
 
+export enum InterestTypes {
+    GROUP = 'GROUP',
+    PRODUCT_CATEGORY = 'PRODUCT_CATEGORY'
+}
+
 export interface Interest {
-    source: String;
-    target: String;
+    source: string;
+    target: string;
+    type: InterestTypes
 }
 
 export const InterestSchema = new Schema<Interest>({
@@ -14,9 +20,9 @@ export const InterestSchema = new Schema<Interest>({
     },
     target: {
         type: Schema.Types.ObjectId,
-        ref: 'ProductCategory',
         require: true
     }, 
+
 });
 
 const InterestModel = model<Interest>('Interest', InterestSchema);

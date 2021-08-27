@@ -1,4 +1,4 @@
-import * as userResource from './UserResource';
+import * as userResource from './user-resources';
 import { Router } from 'express';
 
 const userRouter = Router();

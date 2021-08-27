@@ -6,8 +6,9 @@
 import path from 'path';
 import dotenv from 'dotenv';
 import commandLineArgs from 'command-line-args';
+import importData from './import-data';
 
-
+importData();
 
 (() => {
     // Setup command line options

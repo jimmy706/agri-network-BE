@@ -1,6 +1,7 @@
 import { Router } from 'express';
 import { ping } from './Ping';
-import userRouter from './User.router';
+import provinceRouter from './province-router';
+import userRouter from './user-router';
 
 
 
@@ -13,4 +14,5 @@ pingRouter.get('/', ping);
 const baseRouter = Router();
 baseRouter.use('/users', userRouter);
 baseRouter.use('/ping', pingRouter);
+baseRouter.use('/provinces', provinceRouter);
 export default baseRouter;

@@ -11,7 +11,7 @@ export interface User {
     lastName: string;
     email: string;
     avatar?: string;
-    group: string;
+    province: string;
     phoneNumber: string;
     type: UserType;
 }
@@ -21,7 +21,7 @@ export const UserSchema = new Schema<User>({
     lastName: { type: String, required: true },
     avatar: { type: String, require: false },
     email: { type: String, require: true, unique: true },
-    group: { type: String, require: false },
+    province: { type: String, require: true },
     phoneNumber: { type: String, require: true },
     type: {
         type: String, enum: [

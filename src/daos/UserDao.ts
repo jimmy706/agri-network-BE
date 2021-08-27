@@ -1,21 +1,12 @@
 import UserModel, { User } from '@entities/User';
 import { auth } from 'firebase-admin';
-import FirebaseUser from 'src/@types/express/FireBaseUser';
-import { runNeo4jQuery, createNeo4jTransaction } from 'src/config/neo4j';
+import { createNeo4jTransaction, runNeo4jQuery } from 'src/config/neo4j';
 import FirebaseDao from './FirebaseDao';
 
-export interface IUserDao {
-    getOne: (email: string) => Promise<User | null>;
-    getAll: () => Promise<User[]>;
-    add: (user: User) => Promise<User>;
-    update: (user: User) => Promise<void>;
-    delete: (id: string) => Promise<void>;
-    login: (idToken: string) => Promise<auth.DecodedIdToken>;
-}
 
 const firebaseDao = new FirebaseDao();
 
-class UserDao implements IUserDao {
+class UserDao {
 
 
     public getOne(email: string): Promise<User | null> {
@@ -34,14 +25,19 @@ class UserDao implements IUserDao {
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
         const savedUser = await newUser.save();
-        const { firstName, lastName, email } = savedUser;
+        const { firstName, lastName, email, province } = savedUser;
 
-        const queryAddUserNode = `CREATE (u:User {name: $name, email: $email}) RETURN u`;
+        const queryAddUserNode = `
+            MATCH (p:Province{name: $province}) 
+            CREATE (u:User {name: $name, email: $email})
+            CREATE (u)-[:LIVED_IN]->(p)
+            `;
         const queryParam = {
             name: `${firstName} ${lastName}`,
-            email
+            email,
+            province
         };
-        await createNeo4jTransaction(queryAddUserNode, queryParam);
+        await runNeo4jQuery(queryAddUserNode, queryParam);
         return savedUser;
     }
 

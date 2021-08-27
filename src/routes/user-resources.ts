@@ -20,8 +20,8 @@ export async function getAll(req: Request, res: Response): Promise<Response> {
 
 export async function add(req: AddUserRequest, res: Response): Promise<Response> {
     try {
-        const { firstName, lastName, email, avatar, group, phoneNumber, type } = req.body;
-        const newUser = await userDao.add({ firstName, lastName, email, avatar, group, phoneNumber, type });
+        const user = req.body;
+        const newUser = await userDao.add(user);
         return res.status(CREATED).json(newUser);
     }
     catch(error) {

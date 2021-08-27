@@ -1,4 +1,3 @@
-import logger from '@shared/Logger';
 import { auth } from 'firebase-admin';
 import FirebaseUser from 'src/@types/express/FireBaseUser';
 import { firebaseAdminAuth } from '../config/firebase';
