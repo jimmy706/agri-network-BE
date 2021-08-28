@@ -1,3 +1,4 @@
+import FollowModel from '@entities/Follow';
 import UserModel, { User } from '@entities/User';
 import { auth } from 'firebase-admin';
 import { createNeo4jTransaction, runNeo4jQuery } from 'src/config/neo4j';
@@ -9,9 +10,12 @@ const firebaseDao = new FirebaseDao();
 class UserDao {
 
 
-    public getOne(email: string): Promise<User | null> {
-        // TODO
-        return Promise.resolve(null);
+    public async getOneById(id: string): Promise<User> {
+        const user = await UserModel.findById(id);
+        if(user) {
+            return user;
+        }
+        throw new Error('User not found!');
     }
 
 
@@ -20,7 +24,22 @@ class UserDao {
         return result;
     }
 
-
+    public async getFollowers(id: string): Promise<any> {
+        const followers = await FollowModel.aggregate([
+            {
+                $lookup: {
+                    from: 'users',
+                    localField: 'following',
+                    foreignField: '_id',
+                    as: 'followers'
+                },
+                $match: {
+                    owner: id
+                }
+            },
+        ]);
+        return followers;
+    }
 
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
@@ -41,21 +60,11 @@ class UserDao {
         return savedUser;
     }
 
-    public async login(idToken: string): Promise<auth.DecodedIdToken> {
+    public async auth(idToken: string): Promise<auth.DecodedIdToken> {
         const result = await firebaseDao.verifyIdToken(idToken);
         return result;
     }
-
-
-    public async update(user: User): Promise<void> {
-        // TODO
-        return Promise.resolve(undefined);
-    }
-
-
-    public async delete(id: string): Promise<void> {
-        UserModel.deleteOne({ _id: id })
-    }
+  
 }
 
 export default UserDao;

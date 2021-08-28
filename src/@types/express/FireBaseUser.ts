@@ -5,6 +5,5 @@
     photoURL?:string;
     passwordHash: Buffer;
     phoneNumber: string;
-
 }
 

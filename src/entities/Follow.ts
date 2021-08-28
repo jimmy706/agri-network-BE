@@ -16,13 +16,7 @@ export const FollowSchema = new Schema<Follow>({
             type: Schema.Types.ObjectId,
             ref: 'User'
         }]
-    },
-    follower: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        }]
-    },
+    },   
 });
 
 const FollowModel = model<Follow>('Follow', FollowSchema);
