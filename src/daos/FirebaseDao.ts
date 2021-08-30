@@ -34,6 +34,11 @@ class FirebaseDao implements IFirebaseDao {
         }
     }
 
+    public async createTokenFromUid(uid: string): Promise<string> {
+        const result = await firebaseAdminAuth.createCustomToken(uid);
+        return result        
+    }
+
 }
 
 export default FirebaseDao;

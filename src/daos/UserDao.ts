@@ -9,6 +9,19 @@ const firebaseDao = new FirebaseDao();
 
 class UserDao {
 
+    public async getToken(uid: string): Promise<string> {
+        const token = await firebaseDao.createTokenFromUid(uid);
+        return token;
+    }
+
+    public async getByKey(key: string, value: string): Promise<User[]> {
+        const query:any = {};
+        query[key] = value;
+        const users = await UserModel.find(query);
+
+        return users;
+    }
+
 
     public async getOneById(id: string): Promise<User> {
         const user = await UserModel.findById(id);
@@ -65,6 +78,26 @@ class UserDao {
         return result;
     }
   
+    public async follow(sourceUser: string, targetUser: string): Promise<void> {
+        const follow = await FollowModel.findOne({owner: sourceUser});
+        if(!follow) {
+            const newFollow = new FollowModel({
+                owner: sourceUser,
+                following: [targetUser]
+            })
+            await newFollow.save();
+        }
+        else {
+            const isFollowed = follow.following.findIndex(f => f == targetUser) > -1;
+            if(!isFollowed) {
+                follow.following.push(targetUser);
+                await follow.save();
+            }
+            else {
+                throw "Bạn đang follow người này!";
+            }
+        }
+    }
 }
 
 export default UserDao;

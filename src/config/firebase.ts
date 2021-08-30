@@ -10,6 +10,3 @@ const firebaseAdminApp = admin.initializeApp({
 
 
 export const firebaseAdminAuth = firebaseAdminApp.auth();
-
-
-

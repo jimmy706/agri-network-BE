@@ -11,6 +11,7 @@ interface AddUserRequest extends Request {
     body: User
 }
 
+
 export async function getbyId(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
     try {
@@ -45,6 +46,7 @@ export async function getDecodedToken(req: Request, res: Response): Promise<Resp
         }
     }
     catch (error) {
+        console.log({error})
         return res.status(UNAUTHORIZED).json(error);
     }
 }
@@ -53,7 +55,11 @@ export async function auth(req: Request, res: Response, next: NextFunction): Pro
     try {
         const idToken = req.headers.authorization;
         if (idToken) {
-            await userDao.auth(idToken);
+            const decodedToken = await userDao.auth(idToken);
+            const users = await userDao.getByKey('email', decodedToken.firebase.identities.email[0]);
+            if(users.length > 0) {
+                req.params.authUser = JSON.stringify(users[0]);
+            }
             next();
         }
         else {
@@ -74,5 +80,33 @@ export async function getFollowers(req: Request, res: Response): Promise<Respons
     }
     catch (error) {
         return res.status(NOT_FOUND).json(error);
+    }
+}
+
+export async function getTokenFromUid(req: Request, res: Response): Promise<Response> {
+    const { uid } = req.body;
+    try {
+        const token = await userDao.getToken(uid);
+        return res.status(OK).json({token});
+    }
+    catch(error) {
+        return res.status(UNAUTHORIZED).json(error);
+    }
+}
+
+export async function follow(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) {
+        const sourceUser = JSON.parse(req.params.authUser);
+        try {
+            await userDao.follow(sourceUser.id, id);
+            return res.status(OK).json('Follow thành công!');
+        }
+        catch(error) {
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED);
     }
 }
