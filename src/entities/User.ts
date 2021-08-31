@@ -14,6 +14,7 @@ export interface User {
     province: string;
     phoneNumber: string;
     type: UserType;
+    _id: string;
 }
 
 export const UserSchema = new Schema<User>({

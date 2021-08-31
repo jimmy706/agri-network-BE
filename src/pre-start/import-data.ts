@@ -7,20 +7,20 @@ const cities = JSON.parse(JSON.stringify(citiesJson));
 
 
 export default async function () {
-    try {
-        await ProvinceModel.deleteMany({});
-        await runNeo4jQuery(`MATCH (n) DETACH DELETE n`);
-        const provinces: Province[] = [];
+    // try {
+    //     await ProvinceModel.deleteMany({});
+    //     await runNeo4jQuery(`MATCH (n) DETACH DELETE n`);
+    //     const provinces: Province[] = [];
 
-        for (let key in cities) {
-            const p: Province = new Province(cities[key].name, parseInt(cities[key].code));
-            provinces.push(p);
-        }
-        let queryInsertProvinces: string = provinces.map((p,i) => `CREATE (p${i}:Province {name: '${p.name}'})`).join('\n');
-        await runNeo4jQuery(queryInsertProvinces);
-        await ProvinceModel.insertMany(provinces);
-    }
-    catch (error) {
-        logger.err(error);
-    }
+    //     for (let key in cities) {
+    //         const p: Province = new Province(cities[key].name, parseInt(cities[key].code));
+    //         provinces.push(p);
+    //     }
+    //     let queryInsertProvinces: string = provinces.map((p,i) => `CREATE (p${i}:Province {name: '${p.name}'})`).join('\n');
+    //     await runNeo4jQuery(queryInsertProvinces);
+    //     await ProvinceModel.insertMany(provinces);
+    // }
+    // catch (error) {
+    //     logger.err(error);
+    // }
 };

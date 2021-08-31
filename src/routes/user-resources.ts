@@ -1,7 +1,9 @@
 import UserDao from '@daos/UserDao';
 import { User } from '@entities/User';
+import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
+import SuccessMessages from 'src/constant/success';
 
 
 const userDao = new UserDao();
@@ -71,18 +73,6 @@ export async function auth(req: Request, res: Response, next: NextFunction): Pro
     }
 }
 
-
-export async function getFollowers(req: Request, res: Response): Promise<Response> {
-    const { id } = req.body;
-    try {
-        const followers = await userDao.getFollowers(id);
-        return res.status(OK).json(followers);
-    }
-    catch (error) {
-        return res.status(NOT_FOUND).json(error);
-    }
-}
-
 export async function getTokenFromUid(req: Request, res: Response): Promise<Response> {
     const { uid } = req.body;
     try {
@@ -99,14 +89,45 @@ export async function follow(req: Request, res: Response): Promise<Response> {
     if(req.params.authUser) {
         const sourceUser = JSON.parse(req.params.authUser);
         try {
-            await userDao.follow(sourceUser.id, id);
-            return res.status(OK).json('Follow thành công!');
+            await userDao.follow(sourceUser._id, id);
+            return res.status(OK).json(SuccessMessages.FOLLOW_SUCCESS);
         }
         catch(error) {
+            logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
     }
     else {
         return res.status(UNAUTHORIZED);
+    }
+}
+
+export async function unfollow(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) {
+        const sourceUser = JSON.parse(req.params.authUser);
+        try {
+            await userDao.unfollow(sourceUser._id, id);
+            return res.status(OK).json(SuccessMessages.UNFOLLOW_SUCCESS);
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED);
+    }
+}
+
+export async function getFollowers(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    try {
+        const followers = await userDao.getFollowers(id);
+        return res.status(OK).json(followers);
+    }
+    catch (error) {
+        logger.err(error);
+        return res.status(NOT_FOUND).json(error);
     }
 }

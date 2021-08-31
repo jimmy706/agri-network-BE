@@ -1,22 +1,38 @@
 import { Schema, model } from 'mongoose';
 
-export interface Follow {
-    owner: string;
-    following: string[];
-    follower: string[];
+type FollowUser = {
+    displayName: string;
+    avatar: string | null | undefined;
+    id: string;
 }
+
+export interface Follow {
+    owner: any;
+    followings: FollowUser[];
+    followers: FollowUser[];
+}
+
+const FollowUser = new Schema<FollowUser>({
+    displayName: {
+        type: String,
+        require: true
+    },
+    avatar: {
+        type: String 
+    },
+    id: {
+        type: String,
+        require: true
+    }
+});
 
 export const FollowSchema = new Schema<Follow>({
     owner: {
-        type: Schema.Types.ObjectId,
-        ref: 'User'
+        type: String,
+        require: true
     },
-    following: {
-        type: [{
-            type: Schema.Types.ObjectId,
-            ref: 'User'
-        }]
-    },   
+    followings: [FollowUser],
+    followers: [FollowUser] 
 });
 
 const FollowModel = model<Follow>('Follow', FollowSchema);
