@@ -72,17 +72,17 @@ class UserDao {
         const sourceUser = await this.getOneById(sourceUserId);
         const targetUser = await this.getOneById(targetUserId);
 
-        const isFollowed = follow.followings.findIndex(f => f.id == targetUserId) > -1;
+        const isFollowed = follow.followings.findIndex(f => f.userId == targetUserId) > -1;
         if (!isFollowed) {
             follow.followings.push({
                 displayName: `${targetUser.firstName} ${targetUser.lastName}`,
                 avatar: targetUser.avatar,
-                id: targetUser._id
+                userId: targetUser._id
             });
             followTargetUser.followers.push({
                 displayName: `${sourceUser.firstName} ${sourceUser.lastName}`,
                 avatar: sourceUser.avatar,
-                id: sourceUser._id
+                userId: sourceUser._id
             })
             await follow.save();
             await followTargetUser.save();
@@ -97,8 +97,8 @@ class UserDao {
         const follow = await FollowModel.findOne({owner: sourceUserId});
         const targetUserFollow = await FollowModel.findOne({owner: targetUserId});
         if(follow && targetUserFollow) {
-            follow.followings = follow.followings.filter(f => f.id != targetUserId);
-            targetUserFollow.followers = targetUserFollow.followers.filter(f => f.id != sourceUserId);
+            follow.followings = follow.followings.filter(f => f.userId != targetUserId);
+            targetUserFollow.followers = targetUserFollow.followers.filter(f => f.userId != sourceUserId);
             await follow.save();
             await targetUserFollow.save();
         }

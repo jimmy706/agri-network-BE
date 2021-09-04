@@ -17,6 +17,12 @@ export interface User {
     _id: string;
 }
 
+export type SimpleUser = {
+    displayName: string;
+    avatar: string | null | undefined;
+    userId: string;
+}
+
 export const UserSchema = new Schema<User>({
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },

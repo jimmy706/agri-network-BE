@@ -1,5 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { Comment, CommentSchema } from './Comment';
+import { SimpleUser } from './User';
 
 export enum PostFormat {
     REGULAR = 'REGULAR',
@@ -10,12 +11,20 @@ export enum PostFormat {
 export interface Post {
     content: string;
     postedBy: string;
-    reactions: string[];
+    reactions: SimpleUser[];
+    createdDate: Date;
     lastModified: Date;
     format: PostFormat;
     ref: any;
-    comments: Comment[]
+    comments: Comment[];
+    images: string[];
 }
+
+export const PostReactionSchema = new Schema<SimpleUser>({
+    displayName: String,
+    avatar: String,
+    userId: String
+});
 
 export const PostSchema = new Schema<Post>({
     content: {
@@ -27,10 +36,12 @@ export const PostSchema = new Schema<Post>({
         ref: 'User',
         require: true
     },
-    reactions: [{
-        type: Schema.Types.ObjectId,
-        ref: 'User'
-    }],
+    reactions: [PostReactionSchema],
+    createdDate: {
+        require: true,
+        type: Date,
+        default: new Date()
+    },
     lastModified: {
         require: true,
         default: new Date(),
@@ -39,12 +50,19 @@ export const PostSchema = new Schema<Post>({
     format: {
         require: true,
         default: PostFormat.REGULAR,
+        type: String,
+        enum: [
+            PostFormat.REGULAR,
+            PostFormat.PLAN,
+            PostFormat.SELL
+        ]
     },
     ref: {
         require: false,
         type: Schema.Types.Mixed
     },
-    comments: [CommentSchema]
+    comments: [CommentSchema],
+    images: [String]
 });
 
 const PostModel = model<Post>('Post', PostSchema);
