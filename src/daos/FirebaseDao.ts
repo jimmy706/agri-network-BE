@@ -19,7 +19,7 @@ class FirebaseDao implements IFirebaseDao {
             return result;
         }
         catch (error) {
-            throw new Error(error);
+            throw error;
         }
     }
 
@@ -30,7 +30,7 @@ class FirebaseDao implements IFirebaseDao {
             return decodedToken;
         }
         catch(error){
-            throw new Error(error);
+            throw error;
         }
     }
 

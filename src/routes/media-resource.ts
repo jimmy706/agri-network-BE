@@ -32,7 +32,8 @@ export async function parseFormData(req: Request, res: Response, next: NextFunct
 export async function uploadImage(req: Request, res: Response): Promise<Response> {
     try {
         const result = await mediaDao.uploadImage(req.body);
-        return res.status(CREATED).json(result);
+        const resourceUrl: string = result.data.url;
+        return res.setHeader('location', resourceUrl).status(CREATED).json(resourceUrl);
     }
     catch(error) {
         logger.err(error);

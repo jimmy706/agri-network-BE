@@ -8,7 +8,11 @@ export interface UploadMediaParams {
 }
 
 export interface UploadMediaSuccessResponse {
-    data: Object;
+    data: {
+        id: string;
+        title: string;
+        url: string;
+    };
     success: boolean;
     status: number;
 }
