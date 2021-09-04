@@ -1,10 +1,9 @@
 import FollowModel from '@entities/Follow';
 import UserModel, { User } from '@entities/User';
 import { auth } from 'firebase-admin';
-import { createNeo4jTransaction, runNeo4jQuery } from 'src/config/neo4j';
+import { runNeo4jQuery } from 'src/config/neo4j';
 import ErrorMessages from 'src/constant/errors';
 import FirebaseDao from './FirebaseDao';
-import mongoose from 'mongoose';
 
 
 const firebaseDao = new FirebaseDao();

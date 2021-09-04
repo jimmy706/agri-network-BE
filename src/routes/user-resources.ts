@@ -48,7 +48,6 @@ export async function getDecodedToken(req: Request, res: Response): Promise<Resp
         }
     }
     catch (error) {
-        console.log({error})
         return res.status(UNAUTHORIZED).json(error);
     }
 }
