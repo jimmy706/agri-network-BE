@@ -1,13 +1,16 @@
-import PostDao from "@daos/PostDao";
+import PostDao, { DEFAULT_LIMIT_POST } from "@daos/PostDao";
 import { Post } from "@entities/Post";
+import logger from "@shared/Logger";
 import { Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
+import ErrorMessages from "src/constant/errors";
+import SuccessMessages from "src/constant/success";
 
 interface AddNewPostRequest extends Request {
     body: Post
 }
 
-const { BAD_REQUEST, CREATED, UNAUTHORIZED } = StatusCodes;
+const { BAD_REQUEST, CREATED, UNAUTHORIZED, OK, NOT_FOUND } = StatusCodes;
 
 
 const postDao = new PostDao();
@@ -29,5 +32,66 @@ export async function add(req: AddNewPostRequest, res: Response): Promise<Respon
     }
     else {
         return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function getByUser(req: Request, res: Response): Promise<Response> {
+    const { owner } = req.params;
+    let page = 1;
+    let limit = DEFAULT_LIMIT_POST;
+    if (req.query.page && req.query.limit) {
+        page = typeof req.query.page == 'string' ? Number.parseInt(req.query.page) : 1;
+        limit = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit) : DEFAULT_LIMIT_POST;
+    }
+
+    try {
+        const result = await postDao.getPostFromUser(owner, page, limit);
+
+        return res.status(OK).json(result);
+    }
+    catch (error) {
+        logger.err(error);
+        return res.status(BAD_REQUEST).json(error);
+    }
+}
+
+export async function getCountOfCommentsAndReactions(req: Request, res: Response) {
+    const { id } = req.params;
+    try {
+        const result = await postDao.getPostCommentsCountAndInteractsCount(id);
+        if(Array.isArray(result) && result.length > 0) {
+            return res.status(OK).json(result[0]);
+        }
+        else {
+            throw ErrorMessages.POST_NOT_FOUND;
+        }
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(BAD_REQUEST).json(error);
+    }
+}
+
+export async function remove(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    try {
+        await postDao.remove(id);
+        return res.status(OK).json(SuccessMessages.POST_DELETED);
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(NOT_FOUND).json(error);
+    }
+}
+
+export async function getById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    try {
+        const result = await postDao.getById(id);
+        return res.status(OK).json(result);
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(NOT_FOUND).json(error);
     }
 }

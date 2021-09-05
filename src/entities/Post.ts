@@ -1,6 +1,7 @@
-import { model, Schema } from 'mongoose';
+import { Document, model, PaginateModel, Schema } from 'mongoose';
 import { Comment, CommentSchema } from './Comment';
 import { SimpleUser } from './User';
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 export enum PostFormat {
     REGULAR = 'REGULAR',
@@ -8,7 +9,7 @@ export enum PostFormat {
     PLAN = 'PLAN'
 }
 
-export interface Post {
+export interface Post extends Document{
     content: string;
     postedBy: string;
     reactions: SimpleUser[];
@@ -65,6 +66,10 @@ export const PostSchema = new Schema<Post>({
     images: [String]
 });
 
-const PostModel = model<Post>('Post', PostSchema);
+PostSchema.plugin(mongoosePaginate);
+
+interface PostModelInf<T extends Document> extends PaginateModel<T> {}
+
+const PostModel = model<Post>('Post', PostSchema) as PostModelInf<Post>;
 
 export default PostModel;
