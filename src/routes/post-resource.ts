@@ -1,5 +1,6 @@
 import PostDao, { DEFAULT_LIMIT_POST } from "@daos/PostDao";
 import { Post } from "@entities/Post";
+import { User } from "@entities/User";
 import logger from "@shared/Logger";
 import { Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
@@ -55,20 +56,46 @@ export async function getByUser(req: Request, res: Response): Promise<Response> 
     }
 }
 
-export async function getCountOfCommentsAndReactions(req: Request, res: Response) {
-    const { id } = req.params;
-    try {
-        const result = await postDao.getPostCommentsCountAndInteractsCount(id);
-        if(Array.isArray(result) && result.length > 0) {
-            return res.status(OK).json(result[0]);
+export async function get(req: Request, res: Response): Promise<Response> {
+    let page = 1;
+    let limit = DEFAULT_LIMIT_POST;
+    if(req.params.authUser) {
+        const authUser: User = JSON.parse(req.params.authUser);
+        if (req.query.page && req.query.limit) {
+            page = typeof req.query.page == 'string' ? Number.parseInt(req.query.page) : 1;
+            limit = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit) : DEFAULT_LIMIT_POST;
         }
-        else {
-            throw ErrorMessages.POST_NOT_FOUND;
+        try {
+            const result = await postDao.getPosts(authUser._id, page, limit);
+    
+            return res.status(OK).json(result);
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
         }
     }
-    catch(error) {
-        logger.err(error);
-        return res.status(BAD_REQUEST).json(error);
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function getCountOfCommentsAndReactions(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) {
+        try {
+            const authUser: User = JSON.parse(req.params.authUser);
+            const result = await postDao.getPostCommentsCountAndInteractsCount(authUser._id, id);
+
+            return res.status(OK).json(result);            
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
@@ -86,12 +113,57 @@ export async function remove(req: Request, res: Response): Promise<Response> {
 
 export async function getById(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    try {
-        const result = await postDao.getById(id);
-        return res.status(OK).json(result);
+    if(req.params.authUser) {
+        const authUser: User = JSON.parse(req.params.authUser);
+
+        try {
+            const result = await postDao.getById(id, authUser._id);
+            return res.status(OK).json(result);
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(NOT_FOUND).json(error);
+        }
     }
-    catch(error) {
-        logger.err(error);
-        return res.status(NOT_FOUND).json(error);
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function like(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) { 
+        try {
+            const authUser: User = JSON.parse(req.params.authUser);
+
+            await postDao.like(id, authUser._id);
+            return res.status(OK).json();
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function unlike(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) {
+        try {
+            const authUser: User = JSON.parse(req.params.authUser);
+
+            await postDao.unlike(id, authUser._id);
+            return res.status(OK).json();
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
     }
 }

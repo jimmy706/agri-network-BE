@@ -1,5 +1,5 @@
 import FollowModel from '@entities/Follow';
-import UserModel, { User } from '@entities/User';
+import UserModel, { SimpleUser, User } from '@entities/User';
 import { auth } from 'firebase-admin';
 import { runNeo4jQuery } from 'src/config/neo4j';
 import ErrorMessages from 'src/constant/errors';
@@ -107,7 +107,7 @@ class UserDao {
         }
     }
 
-    public async getFollowers(id: string): Promise<any> {
+    public async getFollowers(id: string): Promise<SimpleUser[]> {
         const follow = await FollowModel.findOne({ owner: id });
         if (follow) {
             return follow.followers;

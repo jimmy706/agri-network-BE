@@ -1,6 +1,5 @@
 import { Document, model, PaginateModel, Schema } from 'mongoose';
-import { Comment, CommentSchema } from './Comment';
-import { SimpleUser } from './User';
+
 const mongoosePaginate = require('mongoose-paginate-v2');
 
 export enum PostFormat {
@@ -12,20 +11,13 @@ export enum PostFormat {
 export interface Post extends Document{
     content: string;
     postedBy: string;
-    reactions: SimpleUser[];
     createdDate: Date;
     lastModified: Date;
     format: PostFormat;
     ref: any;
-    comments: Comment[];
     images: string[];
 }
 
-export const PostReactionSchema = new Schema<SimpleUser>({
-    displayName: String,
-    avatar: String,
-    userId: String
-});
 
 export const PostSchema = new Schema<Post>({
     content: {
@@ -37,7 +29,6 @@ export const PostSchema = new Schema<Post>({
         ref: 'User',
         require: true
     },
-    reactions: [PostReactionSchema],
     createdDate: {
         require: true,
         type: Date,
@@ -62,7 +53,6 @@ export const PostSchema = new Schema<Post>({
         require: false,
         type: Schema.Types.Mixed
     },
-    comments: [CommentSchema],
     images: [String]
 });
 

@@ -33,7 +33,7 @@ export async function uploadImage(req: Request, res: Response): Promise<Response
     try {
         const result = await mediaDao.uploadImage(req.body);
         const resourceUrl: string = result.data.url;
-        return res.setHeader('location', resourceUrl).status(CREATED).json(resourceUrl);
+        return res.setHeader('location', resourceUrl).status(CREATED).send(resourceUrl);
     }
     catch(error) {
         logger.err(error);
