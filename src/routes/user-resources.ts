@@ -58,7 +58,7 @@ export async function auth(req: Request, res: Response, next: NextFunction): Pro
         if (idToken) {
             const decodedToken = await userDao.auth(idToken);
             const users = await userDao.getByKey('email', decodedToken.firebase.identities.email[0]);
-            if(users.length > 0) {
+            if (users.length > 0) {
                 req.params.authUser = JSON.stringify(users[0]);
             }
             next();
@@ -76,22 +76,22 @@ export async function getTokenFromUid(req: Request, res: Response): Promise<Resp
     const { uid } = req.body;
     try {
         const token = await userDao.getToken(uid);
-        return res.status(OK).json({token});
+        return res.status(OK).json({ token });
     }
-    catch(error) {
+    catch (error) {
         return res.status(UNAUTHORIZED).json(error);
     }
 }
 
 export async function follow(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         const sourceUser = JSON.parse(req.params.authUser);
         try {
             await userDao.follow(sourceUser._id, id);
             return res.status(OK).json(SuccessMessages.FOLLOW_SUCCESS);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -103,13 +103,13 @@ export async function follow(req: Request, res: Response): Promise<Response> {
 
 export async function unfollow(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         const sourceUser = JSON.parse(req.params.authUser);
         try {
             await userDao.unfollow(sourceUser._id, id);
             return res.status(OK).json(SuccessMessages.UNFOLLOW_SUCCESS);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -132,11 +132,11 @@ export async function getFollowers(req: Request, res: Response): Promise<Respons
 }
 
 export async function update(req: Request, res: Response): Promise<Response> {
-    const user: User = JSON.parse(req.params.authUser);
-    const id = user._id
+    const authUser: User = JSON.parse(req.params.authUser);
+    const id = authUser._id;
     try {
-        const userEdit = await userDao.updateUser(user,id);
-        return res.status(OK).json(userEdit);
+         await userDao.updateUser(req.body, id);
+        return res.status(OK).json();
     }
     catch (error) {
         return res.status(NOT_FOUND).json(error);

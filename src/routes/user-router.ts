@@ -1,6 +1,5 @@
-import * as userResource from './user-resources';
 import { Router } from 'express';
-import { getbyId } from './user-resources';
+import * as userResource from './user-resources';
 
 const userRouter = Router();
 userRouter.post('/', userResource.add);

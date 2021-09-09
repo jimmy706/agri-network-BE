@@ -68,7 +68,7 @@ class UserDao {
 
     public async follow(sourceUserId: string, targetUserId: string): Promise<void> {
         const follow = await FollowModel.findOne({ owner: sourceUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
-        const followTargetUser = await FollowModel.findOne({owner: targetUserId}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const followTargetUser = await FollowModel.findOne({ owner: targetUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
         const sourceUser = await this.getOneById(sourceUserId);
         const targetUser = await this.getOneById(targetUserId);
 
@@ -94,9 +94,9 @@ class UserDao {
     }
 
     public async unfollow(sourceUserId: string, targetUserId: string): Promise<void> {
-        const follow = await FollowModel.findOne({owner: sourceUserId});
-        const targetUserFollow = await FollowModel.findOne({owner: targetUserId});
-        if(follow && targetUserFollow) {
+        const follow = await FollowModel.findOne({ owner: sourceUserId });
+        const targetUserFollow = await FollowModel.findOne({ owner: targetUserId });
+        if (follow && targetUserFollow) {
             follow.followings = follow.followings.filter(f => f.userId != targetUserId);
             targetUserFollow.followers = targetUserFollow.followers.filter(f => f.userId != sourceUserId);
             await follow.save();
@@ -118,15 +118,15 @@ class UserDao {
     }
 
 
-     public async updateUser(user: User,id: string): Promise<User> {
-         const result = await UserModel.findByIdAndUpdate(id,{
-             firstName:user.firstName,
-             lastName: user.lastName,
-             province: user.province
-
-        }).orFail(new Error(ErrorMessages. USER_NOT_FOUND));
-            return result;
-        }
+    public async updateUser(user: User, id: string): Promise<void> {
+        await UserModel.updateOne({ _id: id }, {
+            firstName: user.firstName,
+            lastName: user.lastName,
+            province: user.province,
+            phoneNumber: user.phoneNumber,
+            avatar: user.avatar
+        }).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+    }
 }
 
 export default UserDao;
