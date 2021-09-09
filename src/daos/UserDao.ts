@@ -116,6 +116,17 @@ class UserDao {
             throw ErrorMessages.NOT_FOUND;
         }
     }
+
+
+     public async updateUser(user: User,id: string): Promise<User> {
+         const result = await UserModel.findByIdAndUpdate(id,{
+             firstName:user.firstName,
+             lastName: user.lastName,
+             province: user.province
+
+        }).orFail(new Error(ErrorMessages. USER_NOT_FOUND));
+            return result;
+        }
 }
 
 export default UserDao;

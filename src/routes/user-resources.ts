@@ -130,3 +130,16 @@ export async function getFollowers(req: Request, res: Response): Promise<Respons
         return res.status(NOT_FOUND).json(error);
     }
 }
+
+export async function update(req: Request, res: Response): Promise<Response> {
+    const user: User = JSON.parse(req.params.authUser);
+    const id = user._id
+    try {
+        const userEdit = await userDao.updateUser(user,id);
+        return res.status(OK).json(userEdit);
+    }
+    catch (error) {
+        return res.status(NOT_FOUND).json(error);
+    }
+}
+
