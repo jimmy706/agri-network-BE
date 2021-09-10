@@ -1,5 +1,5 @@
 import PostModel, { Post } from "@entities/Post";
-import PostCommentModel from "@entities/PostComment";
+import PostCommentModel, { Comment } from "@entities/PostComment";
 import PostReactionModel from "@entities/PostReaction";
 import { SimpleUser } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
@@ -147,5 +147,11 @@ export default class PostDao {
         });
 
         return posts;
+    }
+
+    public async addComment(postId: string, comment: Comment): Promise<void> {
+        await PostCommentModel.updateOne({post: postId}, {
+            $push: { comments: comment }
+        });
     }
 }

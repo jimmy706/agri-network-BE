@@ -1,5 +1,6 @@
 import PostDao, { DEFAULT_LIMIT_POST } from "@daos/PostDao";
 import { Post } from "@entities/Post";
+import { Comment } from "@entities/PostComment";
 import { User } from "@entities/User";
 import logger from "@shared/Logger";
 import { Request, Response } from 'express';
@@ -162,6 +163,24 @@ export async function unlike(req: Request, res: Response): Promise<Response> {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function addComment(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if(req.params.authUser) {
+        const authUser: User = JSON.parse(req.params.authUser);
+        const { content } = req.body;
+        const comment: Comment = {
+            content,
+            owner: authUser._id
+        };
+        await postDao.addComment(id, comment);
+        
+        return res.status(OK).json();
     }
     else {
         return res.status(UNAUTHORIZED).json();
