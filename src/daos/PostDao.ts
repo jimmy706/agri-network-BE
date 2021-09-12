@@ -1,7 +1,7 @@
 import PostModel, { Post } from "@entities/Post";
 import PostCommentModel, { Comment } from "@entities/PostComment";
 import PostReactionModel from "@entities/PostReaction";
-import { SimpleUser } from "@entities/User";
+import { SimpleUser, User } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
 import ErrorMessages from "src/constant/errors";
 import UserDao from "./UserDao";
@@ -15,24 +15,24 @@ export default class PostDao {
         const newPost = new PostModel(post);
         const savedPost = await newPost.save();
 
-        const postReaction = new PostReactionModel({post: savedPost.id});
+        const postReaction = new PostReactionModel({ post: savedPost.id });
         await postReaction.save();
 
-        const postComment = new PostCommentModel({post: savedPost.id});
+        const postComment = new PostCommentModel({ post: savedPost.id });
         await postComment.save();
-        
+
         return savedPost;
     }
 
     public async getById(postId: string, userId: string): Promise<any> {
         const post = await PostModel.findById(postId).orFail(new Error(ErrorMessages.POST_NOT_FOUND));
 
-        const postReactions = await PostReactionModel.findOne({post: postId}).select({
+        const postReactions = await PostReactionModel.findOne({ post: postId }).select({
             'reactions': 1,
             '_id': 0
         }).orFail(new Error(ErrorMessages.NOT_FOUND));
-        
-        const postComments = await PostCommentModel.findOne({post: postId}).orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        const postComments = await PostCommentModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isLiked = postReactions.reactions.findIndex(r => r.owner == userId) > -1;
 
@@ -60,10 +60,10 @@ export default class PostDao {
     }
 
     public async like(postId: string, userId: string): Promise<void> {
-        const postReacts = await PostReactionModel.findOne({post: postId}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postReacts = await PostReactionModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
         const isLiked = postReacts.reactions.findIndex(r => r.owner == userId) > -1;
         if (!isLiked) {
-            postReacts.reactions.push({owner: userId});
+            postReacts.reactions.push({ owner: userId });
             await postReacts.save();
         }
         else {
@@ -72,7 +72,7 @@ export default class PostDao {
     }
 
     public async unlike(postId: string, userId: string): Promise<void> {
-        const postReacts = await PostReactionModel.findOne({post: postId}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postReacts = await PostReactionModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isLiked = postReacts.reactions.findIndex(r => r.owner == userId) > -1;
 
@@ -108,8 +108,8 @@ export default class PostDao {
 
     public async getPostCommentsCountAndInteractsCount(userId: string, postId: string): Promise<any> {
 
-        const postComments = await PostCommentModel.findOne({post: postId}).orFail(new Error(ErrorMessages.NOT_FOUND));
-        const postReactions = await PostReactionModel.findOne({post: postId}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postComments = await PostCommentModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postReactions = await PostReactionModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const result = {
             countComments: postComments.comments.length,
@@ -117,7 +117,7 @@ export default class PostDao {
             isLiked: postReactions.reactions.findIndex(r => r.owner == userId) > -1
         };
 
-        return result;   
+        return result;
     }
 
     public async getPosts(userId: string, page: number = 1, limit: number = DEFAULT_LIMIT_POST): Promise<PaginateResult<Post>> {
@@ -129,16 +129,17 @@ export default class PostDao {
             populate: { path: 'postedBy', select: 'firstName lastName avatar' },
         }
 
-        const followers: SimpleUser[] = await userDao.getFollowers(userId);
-        const followerIdsSet: Set<string> = new Set(followers.map(u => u.userId));
+        const followers: User[] = await userDao.getFollowings(userId);
+        const followerIdsSet: Set<string> = new Set(followers.map(u => u._id));
         followerIdsSet.add(userId);
 
         const followerIds: string[] = Array.from(followerIdsSet);
-
-        const posts:PaginateResult<Post> = await new Promise((resolve, reject) => {
-            PostModel.paginate({ postedBy: { 
-                $in: followerIds
-            } }, paginateOptions, (error, result) => {
+        const posts: PaginateResult<Post> = await new Promise((resolve, reject) => {
+            PostModel.paginate({
+                postedBy: {
+                    $in: followerIds
+                }
+            }, paginateOptions, (error, result) => {
                 if (error)
                     reject(error);
                 else
@@ -150,7 +151,7 @@ export default class PostDao {
     }
 
     public async addComment(postId: string, comment: Comment): Promise<void> {
-        await PostCommentModel.updateOne({post: postId}, {
+        await PostCommentModel.updateOne({ post: postId }, {
             $push: { comments: comment }
         });
     }

@@ -1,34 +1,35 @@
-import { Schema, model } from 'mongoose';
-import { SimpleUser } from './User';
+import { model, Schema } from 'mongoose';
+import { User } from './User';
 
 
 export interface Follow {
-    owner: any;
-    followings: SimpleUser[];
-    followers: SimpleUser[];
+    owner: string;
+    followings: string[];
+    followers: string[];
 }
 
-const FollowUserSchema = new Schema<SimpleUser>({
-    displayName: {
-        type: String,
-        require: true
-    },
-    avatar: {
-        type: String 
-    },
-    userId: {
-        type: String,
-        require: true
-    }
-});
+export type FollowResponse = {
+    owner: string;
+    followings: User[],
+    followers: User[]
+};
 
 export const FollowSchema = new Schema<Follow>({
     owner: {
         type: String,
-        require: true
+        require: true,
+        unique: true
     },
-    followings: [FollowUserSchema],
-    followers: [FollowUserSchema] 
+    followings: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        unique: true
+    }],
+    followers: [{
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        unique: true
+    }] 
 });
 
 const FollowModel = model<Follow>('Follow', FollowSchema);

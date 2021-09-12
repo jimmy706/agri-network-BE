@@ -1,4 +1,6 @@
+import FollowModel from "@entities/Follow";
 import ProvinceModel, { Province } from "@entities/Province";
+import UserModel from "@entities/User";
 import logger from "@shared/Logger";
 import citiesJson from "spec/support/cities.json";
 import {  runNeo4jQuery } from "src/config/neo4j";
@@ -7,6 +9,13 @@ const cities = JSON.parse(JSON.stringify(citiesJson));
 
 
 export default async function () {
+    // const users = await UserModel.find();
+    // await Promise.all(users.map(u => {
+    //     return new Promise(r => {
+    //         r(new FollowModel({owner: u._id}).save());
+    //     })
+    // }));
+ 
     // try {
     //     await ProvinceModel.deleteMany({});
     //     await runNeo4jQuery(`MATCH (n) DETACH DELETE n`);
