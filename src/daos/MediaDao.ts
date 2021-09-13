@@ -12,6 +12,9 @@ export interface UploadMediaSuccessResponse {
         id: string;
         title: string;
         url: string;
+        medium: {
+            url: string;
+        }
     };
     success: boolean;
     status: number;
