@@ -25,7 +25,9 @@ export default class PostDao {
     }
 
     public async getById(postId: string, userId: string): Promise<any> {
-        const post = await PostModel.findById(postId).orFail(new Error(ErrorMessages.POST_NOT_FOUND));
+        const post: Post = await PostModel.findById(postId)
+            .populate({ path: 'postedBy', select: 'firstName lastName avatar' })
+            .orFail(new Error(ErrorMessages.POST_NOT_FOUND));
 
         const postReactions = await PostReactionModel.findOne({ post: postId }).select({
             'reactions': 1,
@@ -37,8 +39,13 @@ export default class PostDao {
         const isLiked = postReactions.reactions.findIndex(r => r.owner == userId) > -1;
 
         return {
-            post,
-            reactionCount: postReactions.reactions.length,
+            content: post.content,
+            _id: post._id,
+            postedBy: post.postedBy,
+            createdDate: post.createdDate,
+            images: post.images,
+            numberOfReactions: postReactions.reactions.length,
+            numberOfComment: postComments.comments.length,
             comments: postComments.comments,
             isLiked
         };
