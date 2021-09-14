@@ -143,3 +143,18 @@ export async function update(req: Request, res: Response): Promise<Response> {
     }
 }
 
+export async  function getUserLogin(req:Request, res:Response): Promise<Response> {
+    const authUserLogin: User = JSON.parse(req.params.authUser);
+    const id = authUserLogin._id;
+
+    try {
+        const userLogin = await userDao.getOneById(id);
+        return res.status(OK).json(userLogin);
+    }
+    catch (error) {
+        return res.status(NOT_FOUND).json(error);
+    }
+
+   
+}
+

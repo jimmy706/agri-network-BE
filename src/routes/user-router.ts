@@ -3,6 +3,7 @@ import * as userResource from './user-resources';
 
 const userRouter = Router();
 userRouter.post('/', userResource.add);
+userRouter.get('/',userResource.auth,userResource.getUserLogin)
 userRouter.patch('/',userResource.auth, userResource.update);
 userRouter.get('/getDecodedToken', userResource.getDecodedToken);
 userRouter.get('/:id', userResource.getbyId);
