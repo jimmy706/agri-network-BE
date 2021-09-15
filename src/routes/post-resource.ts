@@ -178,9 +178,9 @@ export async function addComment(req: Request, res: Response): Promise<Response>
             content,
             owner: authUser._id
         };
-        await postDao.addComment(id, comment);
+        const result = await postDao.addComment(id, comment);
         
-        return res.status(OK).json();
+        return res.status(OK).json(result);
     }
     else {
         return res.status(UNAUTHORIZED).json();
