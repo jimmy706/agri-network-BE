@@ -154,7 +154,5 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
     catch (error) {
         return res.status(NOT_FOUND).json(error);
     }
-
-   
 }
 
