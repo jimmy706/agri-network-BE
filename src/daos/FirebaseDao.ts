@@ -1,6 +1,6 @@
 import { auth } from 'firebase-admin';
-import FirebaseUser from 'src/@types/express/FireBaseUser';
-import { firebaseAdminAuth } from '../config/firebase';
+import FirebaseUser from '@entities/FireBaseUser';
+import { firebaseAdminAuth } from '@config/firebase';
 
 
 export interface IFirebaseDao {

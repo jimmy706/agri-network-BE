@@ -5,8 +5,7 @@ import { User } from "@entities/User";
 import logger from "@shared/Logger";
 import { Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
-import ErrorMessages from "src/constant/errors";
-import SuccessMessages from "src/constant/success";
+import SuccessMessages from "@constant/success";
 
 interface AddNewPostRequest extends Request {
     body: Post
