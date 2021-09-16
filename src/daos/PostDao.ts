@@ -29,12 +29,17 @@ export default class PostDao {
             .populate({ path: 'postedBy', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.POST_NOT_FOUND));
 
-        const postReactions = await PostReactionModel.findOne({ post: postId }).select({
-            'reactions': 1,
-            '_id': 0
-        }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postReactions = await PostReactionModel.findOne({ post: postId })
+            .select({
+                'reactions': 1,
+                '_id': 0
+            })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
 
-        const postComments = await PostCommentModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const postComments = await PostCommentModel
+            .findOne({ post: postId })
+            .populate({ path: 'comments.owner', select: 'firstName lastName avatar' })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isLiked = postReactions.reactions.findIndex(r => r.owner == userId) > -1;
 
@@ -45,7 +50,7 @@ export default class PostDao {
             createdDate: post.createdDate,
             images: post.images,
             numberOfReactions: postReactions.reactions.length,
-            numberOfComment: postComments.comments.length,
+            numberOfComments: postComments.comments.length,
             comments: postComments.comments,
             isLiked
         };
@@ -157,9 +162,19 @@ export default class PostDao {
         return posts;
     }
 
-    public async addComment(postId: string, comment: Comment): Promise<void> {
-        await PostCommentModel.updateOne({ post: postId }, {
-            $push: { comments: comment }
-        });
+    public async addComment(postId: string, comment: Comment): Promise<Comment> {
+        const postComment = await PostCommentModel.findOne({ post: postId })
+            .orFail(new Error(ErrorMessages.POST_NOT_FOUND));
+        
+        postComment.comments.push(comment);
+        await postComment.save();
+
+        const response = await PostCommentModel
+            .findOne({ post: postId })
+            .populate({ path: 'comments.owner', select: 'firstName lastName avatar' })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        const lastIndex = response.comments.length - 1;
+        return response.comments[lastIndex];
     }
 }
