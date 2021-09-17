@@ -13,6 +13,7 @@ const userDao = new UserDao();
 export default class PostDao {
     public async add(post: Post): Promise<Post> {
         const newPost = new PostModel(post);
+        newPost.createdDate = new Date();
         const savedPost = await newPost.save();
 
         const postReaction = new PostReactionModel({ post: savedPost.id });
