@@ -46,13 +46,14 @@ class UserDao {
 
         const queryAddUserNode = `
             MATCH (p:Province{name: $province}) 
-            CREATE (u:User {name: $name, email: $email})
+            CREATE (u:User {name: $name, email: $email, uid: $uid})
             CREATE (u)-[:LIVED_IN]->(p)
             `;
         const queryParam = {
             name: `${firstName} ${lastName}`,
             email,
-            province
+            province,
+            uid: savedUser._id
         };
         const newFollowObj = new FollowModel({
             owner: savedUser._id
@@ -88,7 +89,7 @@ class UserDao {
             }
 
             const queryResult = await runNeo4jQuery(queryFollowUserNode, queryParams);
-            logger.info(queryResult.summary);
+            console.info(queryResult.summary.updateStatistics);
 
             await sourceFollow.save();
             await targetFollow.save();
@@ -102,6 +103,19 @@ class UserDao {
         const follow = await FollowModel.findOne({ owner: sourceUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
         const targetUserFollow = await FollowModel.findOne({ owner: targetUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
+        const queryUnfollowUserNode = `
+                MATCH (u1:User {uid: $uid1})-[r:FOLLOWED]->(u2:User {uid: $uid2})
+                DELETE r
+            `;
+        const queryParams = {
+            uid1: sourceUserId,
+            uid2: targetUserId
+        }
+
+        const queryResult = await runNeo4jQuery(queryUnfollowUserNode, queryParams);
+        console.info(queryResult.summary.updateStatistics);
+
+
         follow.followings = follow.followings.filter(f => f != targetUserId);
         targetUserFollow.followers = targetUserFollow.followers.filter(f => f != sourceUserId);
         await follow.save();
@@ -113,7 +127,7 @@ class UserDao {
         const follow: any = await FollowModel.findOne({ owner: id })
             .populate({ path: 'followers', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
-            
+
         if (follow) {
             return follow.followers;
         }
@@ -126,7 +140,7 @@ class UserDao {
         const follow: any = await FollowModel.findOne({ owner: id })
             .populate({ path: 'followings', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
-            
+
         if (follow) {
             return follow.followings;
         }
@@ -145,6 +159,8 @@ class UserDao {
             avatar: user.avatar
         }).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
     }
+
+   
 }
 
 export default UserDao;
