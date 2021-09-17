@@ -1,8 +1,9 @@
-import FollowModel, { FollowResponse } from '@entities/Follow';
-import UserModel, { SimpleUser, User } from '@entities/User';
+import FollowModel from '@entities/Follow';
+import UserModel, { User } from '@entities/User';
+import logger from '@shared/Logger';
 import { auth } from 'firebase-admin';
-import { runNeo4jQuery } from 'src/config/neo4j';
-import ErrorMessages from 'src/constant/errors';
+import { runNeo4jQuery } from '@config/neo4j';
+import ErrorMessages from '@constant/errors';
 import FirebaseDao from './FirebaseDao';
 
 
@@ -74,6 +75,20 @@ class UserDao {
         if (!isFollowed) {
             sourceFollow.followings.push(targetUserId);
             targetFollow.followers.push(sourceUserId);
+
+            const queryFollowUserNode = `
+                MATCH (u1:User {uid: $uid1})
+                MATCH (u2:User {uid: $uid2})
+                MERGE (u1)-[:FOLLOWED]->(u2)
+            `;
+
+            const queryParams = {
+                uid1: sourceUserId,
+                uid2: targetUserId
+            }
+
+            const queryResult = await runNeo4jQuery(queryFollowUserNode, queryParams);
+            logger.info(queryResult.summary);
 
             await sourceFollow.save();
             await targetFollow.save();

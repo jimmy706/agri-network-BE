@@ -70,7 +70,13 @@
       ],
       "@server": [
         "src/Server"
-      ]
+      ],
+      "@constant/*": [
+        "src/constant/*"
+      ],
+      "@config/*": [
+        "src/config/*"
+      ],
     },
     "resolveJsonModule": true, // json imports
   },

@@ -10,6 +10,7 @@ export async function runNeo4jQuery(query: string, params: Object = {}): Promise
     const session = driver.session({ database: NEO4J_DB_NAME });
 
     const result = await session.run(query, params);
+    session.close();
     return result;
 }
 

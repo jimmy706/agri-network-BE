@@ -3,7 +3,7 @@ import PostCommentModel, { Comment } from "@entities/PostComment";
 import PostReactionModel from "@entities/PostReaction";
 import { SimpleUser, User } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
-import ErrorMessages from "src/constant/errors";
+import ErrorMessages from "@constant/errors";
 import UserDao from "./UserDao";
 
 export const DEFAULT_LIMIT_POST = 6;

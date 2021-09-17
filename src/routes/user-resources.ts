@@ -3,7 +3,7 @@ import { User } from '@entities/User';
 import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
-import SuccessMessages from 'src/constant/success';
+import SuccessMessages from '@constant/success';
 
 
 const userDao = new UserDao();
