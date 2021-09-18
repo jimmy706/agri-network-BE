@@ -125,8 +125,8 @@ export default class PostDao {
         const postReactions = await PostReactionModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const result = {
-            countComments: postComments.comments.length,
-            countReactions: postReactions.reactions.length,
+            numberOfComments: postComments.comments.length,
+            numberOfReactions: postReactions.reactions.length,
             isLiked: postReactions.reactions.findIndex(r => r.owner == userId) > -1
         };
 

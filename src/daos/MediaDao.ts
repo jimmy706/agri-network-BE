@@ -14,6 +14,9 @@ export interface UploadMediaSuccessResponse {
         url: string;
         medium: {
             url: string;
+        },
+        thumb: {
+            url: string;
         }
     };
     success: boolean;
