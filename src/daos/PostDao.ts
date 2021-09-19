@@ -57,8 +57,18 @@ export default class PostDao {
         };
     }
 
-    public async remove(postId: string): Promise<void> {
-        await PostModel.findByIdAndRemove(postId).orFail(new Error(ErrorMessages.POST_NOT_FOUND));
+    public async remove(postId: string, userId: string): Promise<void> {
+        const post: Post = await PostModel.findById(postId).orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        if (post.postedBy == userId) {            
+            await PostCommentModel.findOneAndDelete({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
+            await PostReactionModel.deleteOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
+            await post.remove();
+        }
+        else {
+            throw new Error(ErrorMessages.PERMISSTION_DENIED);
+        }
+
     }
 
     public async update(post: Post, postId: string): Promise<Post> {
@@ -166,7 +176,7 @@ export default class PostDao {
     public async addComment(postId: string, comment: Comment): Promise<Comment> {
         const postComment = await PostCommentModel.findOne({ post: postId })
             .orFail(new Error(ErrorMessages.POST_NOT_FOUND));
-        
+
         postComment.comments.push(comment);
         await postComment.save();
 

@@ -73,7 +73,7 @@ export async function get(req: Request, res: Response): Promise<Response> {
             }));
 
             resultCopy.docs = resultCopy.docs.map((p: Post, i: number) => {
-                return {...p, ...mapCountLikeAndReaction[i]};
+                return { ...p, ...mapCountLikeAndReaction[i] };
             });
             return res.status(OK).json(resultCopy);
         }
@@ -108,13 +108,20 @@ export async function getCountOfCommentsAndReactions(req: Request, res: Response
 
 export async function remove(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    try {
-        await postDao.remove(id);
-        return res.status(OK).json(SuccessMessages.POST_DELETED);
+    if (req.params.authUser) {
+        try {
+            const authUser: User = JSON.parse(req.params.authUser);
+
+            await postDao.remove(id, authUser._id);
+            return res.status(OK).json(SuccessMessages.POST_DELETED);
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(NOT_FOUND).json(error);
+        }
     }
-    catch (error) {
-        logger.err(error);
-        return res.status(NOT_FOUND).json(error);
+    else {
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
