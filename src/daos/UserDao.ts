@@ -89,7 +89,6 @@ class UserDao {
             }
 
             const queryResult = await runNeo4jQuery(queryFollowUserNode, queryParams);
-            console.info(queryResult.summary.updateStatistics);
 
             await sourceFollow.save();
             await targetFollow.save();
