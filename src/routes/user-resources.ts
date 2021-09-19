@@ -155,4 +155,3 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
         return res.status(NOT_FOUND).json(error);
     }
 }
-

@@ -1,9 +1,9 @@
+import ErrorMessages from "@constant/errors";
 import PostModel, { Post } from "@entities/Post";
 import PostCommentModel, { Comment } from "@entities/PostComment";
 import PostReactionModel from "@entities/PostReaction";
-import { SimpleUser, User } from "@entities/User";
+import { User } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
-import ErrorMessages from "@constant/errors";
 import UserDao from "./UserDao";
 
 export const DEFAULT_LIMIT_POST = 6;
@@ -13,6 +13,7 @@ const userDao = new UserDao();
 export default class PostDao {
     public async add(post: Post): Promise<Post> {
         const newPost = new PostModel(post);
+        newPost.createdDate = new Date();
         const savedPost = await newPost.save();
 
         const postReaction = new PostReactionModel({ post: savedPost.id });
@@ -124,8 +125,8 @@ export default class PostDao {
         const postReactions = await PostReactionModel.findOne({ post: postId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const result = {
-            countComments: postComments.comments.length,
-            countReactions: postReactions.reactions.length,
+            numberOfComments: postComments.comments.length,
+            numberOfReactions: postReactions.reactions.length,
             isLiked: postReactions.reactions.findIndex(r => r.owner == userId) > -1
         };
 

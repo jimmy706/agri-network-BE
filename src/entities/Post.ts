@@ -32,7 +32,6 @@ export const PostSchema = new Schema<Post>({
     createdDate: {
         require: true,
         type: Date,
-        default: new Date()
     },
     lastModified: {
         require: true,

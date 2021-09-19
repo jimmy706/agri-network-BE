@@ -59,7 +59,7 @@ export async function getByUser(req: Request, res: Response): Promise<Response> 
 export async function get(req: Request, res: Response): Promise<Response> {
     let page = 1;
     let limit = DEFAULT_LIMIT_POST;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         const authUser: User = JSON.parse(req.params.authUser);
         if (req.query.page && req.query.limit) {
             page = typeof req.query.page == 'string' ? Number.parseInt(req.query.page) : 1;
@@ -67,8 +67,15 @@ export async function get(req: Request, res: Response): Promise<Response> {
         }
         try {
             const result = await postDao.getPosts(authUser._id, page, limit);
-    
-            return res.status(OK).json(result);
+            const resultCopy: any = JSON.parse(JSON.stringify(result));
+            const mapCountLikeAndReaction = await Promise.all(result.docs.map(p => {
+                return postDao.getPostCommentsCountAndInteractsCount(authUser._id, p.id);
+            }));
+
+            resultCopy.docs = resultCopy.docs.map((p: Post, i: number) => {
+                return {...p, ...mapCountLikeAndReaction[i]};
+            });
+            return res.status(OK).json(resultCopy);
         }
         catch (error) {
             logger.err(error);
@@ -82,14 +89,14 @@ export async function get(req: Request, res: Response): Promise<Response> {
 
 export async function getCountOfCommentsAndReactions(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         try {
             const authUser: User = JSON.parse(req.params.authUser);
             const result = await postDao.getPostCommentsCountAndInteractsCount(authUser._id, id);
 
-            return res.status(OK).json(result);            
+            return res.status(OK).json(result);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -105,7 +112,7 @@ export async function remove(req: Request, res: Response): Promise<Response> {
         await postDao.remove(id);
         return res.status(OK).json(SuccessMessages.POST_DELETED);
     }
-    catch(error) {
+    catch (error) {
         logger.err(error);
         return res.status(NOT_FOUND).json(error);
     }
@@ -113,14 +120,14 @@ export async function remove(req: Request, res: Response): Promise<Response> {
 
 export async function getById(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         const authUser: User = JSON.parse(req.params.authUser);
 
         try {
             const result = await postDao.getById(id, authUser._id);
             return res.status(OK).json(result);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(NOT_FOUND).json(error);
         }
@@ -132,14 +139,14 @@ export async function getById(req: Request, res: Response): Promise<Response> {
 
 export async function like(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) { 
+    if (req.params.authUser) {
         try {
             const authUser: User = JSON.parse(req.params.authUser);
 
             await postDao.like(id, authUser._id);
             return res.status(OK).json();
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -151,14 +158,14 @@ export async function like(req: Request, res: Response): Promise<Response> {
 
 export async function unlike(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         try {
             const authUser: User = JSON.parse(req.params.authUser);
 
             await postDao.unlike(id, authUser._id);
             return res.status(OK).json();
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -170,7 +177,7 @@ export async function unlike(req: Request, res: Response): Promise<Response> {
 
 export async function addComment(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    if(req.params.authUser) {
+    if (req.params.authUser) {
         const authUser: User = JSON.parse(req.params.authUser);
         const { content } = req.body;
         const comment: Comment = {
@@ -178,7 +185,7 @@ export async function addComment(req: Request, res: Response): Promise<Response>
             owner: authUser._id
         };
         const result = await postDao.addComment(id, comment);
-        
+
         return res.status(OK).json(result);
     }
     else {
