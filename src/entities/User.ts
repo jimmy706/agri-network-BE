@@ -15,6 +15,7 @@ export interface User {
     phoneNumber: string;
     type: UserType;
     _id: string;
+    isFollowed?: boolean;
 }
 
 export type SimpleUser = {

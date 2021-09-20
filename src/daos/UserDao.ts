@@ -1,13 +1,17 @@
-import FollowModel from '@entities/Follow';
+import FollowModel, { Follow } from '@entities/Follow';
 import UserModel, { User } from '@entities/User';
-import logger from '@shared/Logger';
 import { auth } from 'firebase-admin';
 import { runNeo4jQuery } from '@config/neo4j';
 import ErrorMessages from '@constant/errors';
 import FirebaseDao from './FirebaseDao';
 
-
+export const DEFAULT_LIMIT_USERS_RENDER = 10;
 const firebaseDao = new FirebaseDao();
+
+export interface CountFollowingsAndFollowers {
+    followingsCount: number,
+    followersCount: number
+}
 
 class UserDao {
 
@@ -88,7 +92,7 @@ class UserDao {
                 uid2: targetUserId
             }
 
-            const queryResult = await runNeo4jQuery(queryFollowUserNode, queryParams);
+            await runNeo4jQuery(queryFollowUserNode, queryParams);
 
             await sourceFollow.save();
             await targetFollow.save();
@@ -111,9 +115,7 @@ class UserDao {
             uid2: targetUserId
         }
 
-        const queryResult = await runNeo4jQuery(queryUnfollowUserNode, queryParams);
-        console.info(queryResult.summary.updateStatistics);
-
+        await runNeo4jQuery(queryUnfollowUserNode, queryParams);
 
         follow.followings = follow.followings.filter(f => f != targetUserId);
         targetUserFollow.followers = targetUserFollow.followers.filter(f => f != sourceUserId);
@@ -122,29 +124,55 @@ class UserDao {
 
     }
 
-    public async getFollowers(id: string): Promise<User[]> {
-        const follow: any = await FollowModel.findOne({ owner: id })
+    public async getFollowers(
+        id: string,
+        page: number = 1,
+        limit: number = DEFAULT_LIMIT_USERS_RENDER,
+        isIncludeFollowedQuery: boolean = false
+    ): Promise<User[]> {
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        
+        const follow: any = await FollowModel.findOne({ owner: id }, { _id: 0, followers: { $slice: [startIndex, endIndex] } })
             .populate({ path: 'followers', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
 
-        if (follow) {
-            return follow.followers;
+        if (isIncludeFollowedQuery) {
+            const followers: User[] = JSON.parse(JSON.stringify(follow.followers));
+            return followers.map(u => {
+                let uid = u._id;
+                const isFollowed = follow.followings.findIndex((f: string) => f == uid) != -1;
+
+                u.isFollowed = isFollowed;
+                return u;
+            });
         }
-        else {
-            throw ErrorMessages.NOT_FOUND;
-        }
+        return follow.followers;
     }
 
-    public async getFollowings(id: string): Promise<User[]> {
-        const follow: any = await FollowModel.findOne({ owner: id })
+    public async getFollowings(
+        id: string,
+        page: number = 1,
+        limit: number = DEFAULT_LIMIT_USERS_RENDER,): Promise<User[]> {
+
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        const follow: any = await FollowModel.findOne({ owner: id }, { _id: 0, followings: { $slice: [startIndex, endIndex] } })
             .populate({ path: 'followings', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
 
-        if (follow) {
-            return follow.followings;
-        }
-        else {
-            throw ErrorMessages.NOT_FOUND;
+        return follow.followings;
+    }
+
+    public async getCountFollowingAndFollower(id: string): Promise<CountFollowingsAndFollowers> {
+        const follow: Follow = await FollowModel.findOne({ owner: id })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        return {
+            followersCount: follow.followers.length,
+            followingsCount: follow.followings.length
         }
     }
 
@@ -159,7 +187,7 @@ class UserDao {
         }).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
     }
 
-   
+
 }
 
 export default UserDao;
