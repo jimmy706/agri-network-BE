@@ -135,7 +135,7 @@ class UserDao {
         const endIndex = page * limit;
         
         const follow: any = await FollowModel.findOne({ owner: id }, { _id: 0, followers: { $slice: [startIndex, endIndex] } })
-            .populate({ path: 'followers', select: 'firstName lastName avatar' })
+            .populate({ path: 'followers', select: 'firstName lastName avatar type' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
 
         if (isIncludeFollowedQuery) {
@@ -160,7 +160,7 @@ class UserDao {
         const endIndex = page * limit;
 
         const follow: any = await FollowModel.findOne({ owner: id }, { _id: 0, followings: { $slice: [startIndex, endIndex] } })
-            .populate({ path: 'followings', select: 'firstName lastName avatar' })
+            .populate({ path: 'followings', select: 'firstName lastName avatar type' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
 
         return follow.followings;

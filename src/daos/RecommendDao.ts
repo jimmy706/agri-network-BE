@@ -1,13 +1,14 @@
 import { runNeo4jQuery } from "@config/neo4j";
 import UserModel, { User } from "@entities/User";
 import mongoose from 'mongoose';
+import { DEFAULT_LIMIT_USERS_RENDER } from "./UserDao";
 
 class RecommendDao {
     public async getRecommendedUsers(userId: String): Promise<User[]> {
         // Query users in same province and NOT follow
         const queryString = `MATCH (u{uid: $uid})-[:LIVED_IN]->(p1)<-[:LIVED_IN]-(other)
         WHERE NOT (u)-[:FOLLOWED]->(other)
-        RETURN other.uid`;
+        RETURN other.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}`;
 
         const queryParams = {
             uid: userId
