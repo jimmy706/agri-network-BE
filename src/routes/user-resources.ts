@@ -1,4 +1,4 @@
-import UserDao from '@daos/UserDao';
+import UserDao, { DEFAULT_LIMIT_USERS_RENDER } from '@daos/UserDao';
 import { User } from '@entities/User';
 import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
@@ -121,13 +121,33 @@ export async function unfollow(req: Request, res: Response): Promise<Response> {
 
 export async function getFollowers(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
+    let page = 1;
+    let limit = DEFAULT_LIMIT_USERS_RENDER;
     try {
-        const followers = await userDao.getFollowers(id);
+        if (req.query.page && req.query.limit) {
+            page = typeof req.query.page == 'string' ? Number.parseInt(req.query.page) : 1;
+            limit = typeof req.query.limit == 'string' ? Number.parseInt(req.query.limit) : DEFAULT_LIMIT_USERS_RENDER;
+        }
+        const followers = await userDao.getFollowers(id, page, limit, true);
         return res.status(OK).json(followers);
     }
     catch (error) {
         logger.err(error);
-        return res.status(NOT_FOUND).json(error);
+        return res.status(BAD_REQUEST).json(error);
+    }
+}
+
+export async function getFollowings(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    let page = 1;
+    let limit = DEFAULT_LIMIT_USERS_RENDER;
+    try {
+        const followings = await userDao.getFollowings(id, page, limit);
+        return res.status(OK).json(followings);
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(BAD_REQUEST).json(error);
     }
 }
 

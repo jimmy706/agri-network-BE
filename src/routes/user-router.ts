@@ -10,6 +10,7 @@ userRouter.get('/:id', userResource.getbyId);
 userRouter.post('/:id/follow', userResource.auth, userResource.follow);
 userRouter.post('/:id/unfollow', userResource.auth, userResource.unfollow);
 userRouter.get('/:id/followers', userResource.auth, userResource.getFollowers);
+userRouter.get('/:id/followings', userResource.auth, userResource.getFollowings);
 userRouter.post('/getToken', userResource.getTokenFromUid);
 
 
