@@ -188,6 +188,23 @@ class UserDao {
     }
 
 
+    public async searchUser( userParam: string): Promise<User[]>{
+
+         const firstNameReq = userParam;
+         const lastNameReq = userParam;
+
+        const userResult: User[] =  await UserModel.find({ 
+            $or:[
+                {"firstName": {'$regex': firstNameReq}},
+                {"lastName": {'$regex': lastNameReq}}
+            ]   
+           
+        })
+        if(userResult){
+            return userResult;
+        }
+        throw new Error('User not found!');
+    }
 }
 
 export default UserDao;

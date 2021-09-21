@@ -175,3 +175,15 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
         return res.status(NOT_FOUND).json(error);
     }
 }
+
+export async function searchByUser(req: Request, res: Response) {
+    const  userParam  = req.params.user;
+   // console.log(userParam)
+    try{
+        const userResult: User[] = await userDao.searchUser(userParam);
+        return res.status(OK).json(userResult);
+    }
+    catch(error){
+        return res.status(NOT_FOUND).json(error);
+    }
+}
