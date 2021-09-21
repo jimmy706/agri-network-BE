@@ -12,7 +12,7 @@ userRouter.post('/:id/unfollow', userResource.auth, userResource.unfollow);
 userRouter.get('/:id/followers', userResource.auth, userResource.getFollowers);
 userRouter.get('/:id/followings', userResource.auth, userResource.getFollowings);
 userRouter.post('/getToken', userResource.getTokenFromUid);
-userRouter.get('/search/:user',userResource.searchByUser);
+userRouter.get('/search/userName',userResource.searchByUser);
 
 
 export default userRouter;

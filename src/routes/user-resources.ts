@@ -177,10 +177,10 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
 }
 
 export async function searchByUser(req: Request, res: Response) {
-    const  userParam  = req.params.user;
-   // console.log(userParam)
+     const  search: any = req.query.search;
+    //console.log(typeof search);
     try{
-        const userResult: User[] = await userDao.searchUser(userParam);
+        const userResult: User[] = await userDao.searchUser(search);
         return res.status(OK).json(userResult);
     }
     catch(error){

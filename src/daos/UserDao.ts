@@ -199,7 +199,7 @@ class UserDao {
                 {"lastName": {'$regex': lastNameReq}}
             ]   
            
-        })
+        }).limit(5)
         if(userResult){
             return userResult;
         }
