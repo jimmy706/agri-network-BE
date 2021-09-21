@@ -188,18 +188,16 @@ class UserDao {
     }
 
 
-    public async searchUser( userParam: string): Promise<User[]>{
+    public async searchUser( searchParam: string): Promise<User[]>{
 
-         const firstNameReq = userParam;
-         const lastNameReq = userParam;
 
         const userResult: User[] =  await UserModel.find({ 
             $or:[
-                {"firstName": {'$regex': firstNameReq}},
-                {"lastName": {'$regex': lastNameReq}}
+                {"firstName": {'$regex': searchParam}},
+                {"lastName": {'$regex': searchParam}}
             ]   
            
-        }).limit(5)
+        }).limit(DEFAULT_LIMIT_USERS_RENDER)
         if(userResult){
             return userResult;
         }
