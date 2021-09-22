@@ -15,14 +15,12 @@ class RecommendDao {
         };
 
         const queryResult = await runNeo4jQuery(queryString, queryParams);
-
         const uids = [];
         for(let record of queryResult.records) {
             const uid = record.get('other.uid');
             uids.push(uid);
         }
         const uidsToObjectIds: any = uids.map(uid => mongoose.Types.ObjectId(uid));
-
         const users = UserModel.find({
             _id: {
                 $in: uidsToObjectIds

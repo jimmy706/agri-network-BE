@@ -47,7 +47,6 @@ class UserDao {
         const newUser = new UserModel(user);
         const savedUser = await newUser.save();
         const { firstName, lastName, email, province } = savedUser;
-
         const queryAddUserNode = `
             MATCH (p:Province{name: $province}) 
             CREATE (u:User {name: $name, email: $email, uid: $uid})
@@ -57,7 +56,7 @@ class UserDao {
             name: `${firstName} ${lastName}`,
             email,
             province,
-            uid: savedUser._id
+            uid: String(savedUser._id)
         };
         const newFollowObj = new FollowModel({
             owner: savedUser._id
@@ -189,7 +188,6 @@ class UserDao {
 
 
     public async searchUser( searchParam: string): Promise<User[]>{
-
 
         const userResult: User[] =  await UserModel.find({ 
             $or:[

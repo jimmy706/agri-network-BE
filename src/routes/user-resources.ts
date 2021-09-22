@@ -32,6 +32,7 @@ export async function add(req: AddUserRequest, res: Response): Promise<Response>
         return res.status(CREATED).json(newUser);
     }
     catch (error) {
+        logger.err(error);
         return res.status(BAD_REQUEST).json(error);
     }
 }
