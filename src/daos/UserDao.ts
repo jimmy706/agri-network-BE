@@ -4,6 +4,7 @@ import { auth } from 'firebase-admin';
 import { runNeo4jQuery } from '@config/neo4j';
 import ErrorMessages from '@constant/errors';
 import FirebaseDao from './FirebaseDao';
+import UserDetail from '@entities/UserDetail';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
 const firebaseDao = new FirebaseDao();
@@ -29,12 +30,16 @@ class UserDao {
     }
 
 
-    public async getOneById(id: string): Promise<User> {
-        const user = await UserModel.findById(id);
-        if (user) {
-            return user;
-        }
-        throw new Error('User not found!');
+    public async getOneById(currentLoginUserId: string ,id: string): Promise<UserDetail> {
+        const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const follow = await FollowModel.findOne({ owner:  id}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        
+        const isFollowed: boolean = follow.followers.findIndex(f => f == currentLoginUserId) > -1;
+        const numberOfFollowers: number = follow.followers.length;
+        const numberOfFollowings: number = follow.followings.length;
+
+        const userDetail: UserDetail = {...user.toObject(), isFollowed, numberOfFollowers, numberOfFollowings};
+        return userDetail;
     }
 
 

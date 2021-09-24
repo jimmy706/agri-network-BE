@@ -13,15 +13,21 @@ interface AddUserRequest extends Request {
     body: User
 }
 
-
 export async function getbyId(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
-    try {
-        const user = await userDao.getOneById(id);
-        return res.status(OK).json(user);
+    if (req.params.authUser) {
+        const authUser: User = JSON.parse(req.params.authUser);
+
+        try {
+            const user = await userDao.getOneById(authUser._id, id);
+            return res.status(OK).json(user);
+        }
+        catch (error) {
+            return res.status(NOT_FOUND).json(error);
+        }
     }
-    catch (error) {
-        return res.status(NOT_FOUND).json(error);
+    else {
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
@@ -98,7 +104,7 @@ export async function follow(req: Request, res: Response): Promise<Response> {
         }
     }
     else {
-        return res.status(UNAUTHORIZED);
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
@@ -116,7 +122,7 @@ export async function unfollow(req: Request, res: Response): Promise<Response> {
         }
     }
     else {
-        return res.status(UNAUTHORIZED);
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
@@ -169,7 +175,7 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
     const id = authUserLogin._id;
 
     try {
-        const userLogin = await userDao.getOneById(id);
+        const userLogin = await userDao.getOneById(authUserLogin._id, id);
         return res.status(OK).json(userLogin);
     }
     catch (error) {
