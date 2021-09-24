@@ -196,10 +196,11 @@ class UserDao {
 
         const userResult: User[] =  await UserModel.find({ 
             $or:[
-                {"firstName": {'$regex': searchParam}},
-                {"lastName": {'$regex': searchParam}}
-            ]   
-           
+                    {"firstName": {'$regex': searchParam, $options:"i"}},
+                    {"lastName": {'$regex': searchParam, $options:"i"}}
+                
+            ] 
+            
         }).limit(DEFAULT_LIMIT_USERS_RENDER)
         if(userResult){
             return userResult;
