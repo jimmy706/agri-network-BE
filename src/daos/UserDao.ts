@@ -190,10 +190,15 @@ class UserDao {
     public async searchUser( searchParam: string): Promise<User[]>{
 
         const userResult: User[] =  await UserModel.find({ 
-            $or:[
+            
+             $or:[
                 {"firstName": {'$regex': searchParam}},
-                {"lastName": {'$regex': searchParam}}
-            ]   
+                {"lastName": {'$regex': searchParam}},
+                {"firstName": {'$regex': searchParam.toLowerCase()}},
+                {"lastName": {'$regex': searchParam.toLowerCase()}},
+                {"firstName": {'$regex': searchParam.toUpperCase()}},
+                {"lastName": {'$regex': searchParam.toUpperCase()}},
+            ] 
            
         }).limit(DEFAULT_LIMIT_USERS_RENDER)
         if(userResult){
