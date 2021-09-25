@@ -23,7 +23,7 @@ class RecommendDao {
         }
 
         // Query FOAF
-        const queryStringFoaf = `MATCH (u:User {uid: $uid})<-[:FOLLOWED]-(other:User)<-[:FOLLOWED]-(foaf:User)
+        const queryStringFoaf = `MATCH (u:User {uid: $uid})-[:FOLLOWED]->(other:User)<-[:FOLLOWED]-(foaf:User)
         WHERE NOT (u)-[:FOLLOWED]->(foaf) AND foaf.uid <> $uid
         RETURN foaf.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}`;
         const queryParamsFoaf = {
