@@ -5,6 +5,9 @@ import { runNeo4jQuery } from '@config/neo4j';
 import ErrorMessages from '@constant/errors';
 import FirebaseDao from './FirebaseDao';
 import UserDetail from '@entities/UserDetail';
+import FriendModel from '@entities/Friend';
+import FriendRequestModel from '@entities/FriendRequest';
+import mongoose from 'mongoose';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
 const firebaseDao = new FirebaseDao();
@@ -30,18 +33,23 @@ class UserDao {
     }
 
 
-    public async getOneById(currentLoginUserId: string ,id: string): Promise<UserDetail> {
+    public async getOneById(currentLoginUserId: string, id: string): Promise<UserDetail> {
         const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
-        const follow = await FollowModel.findOne({ owner:  id}).orFail(new Error(ErrorMessages.NOT_FOUND));
-        
+        const follow = await FollowModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
+
         const isFollowed: boolean = follow.followers.findIndex(f => f == currentLoginUserId) > -1;
         const numberOfFollowers: number = follow.followers.length;
         const numberOfFollowings: number = follow.followings.length;
 
-        const userDetail: UserDetail = {...user.toObject(), isFollowed, numberOfFollowers, numberOfFollowings};
+        const userDetail: UserDetail = { ...user.toObject(), isFollowed, numberOfFollowers, numberOfFollowings };
         return userDetail;
     }
 
+    public async getById(id: string): Promise<User> {
+        const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+
+        return user;
+    }
 
     public async getAll(): Promise<User[]> {
         const result = await UserModel.find();
@@ -67,6 +75,12 @@ class UserDao {
             owner: savedUser._id
         });
         await newFollowObj.save();
+
+        const friendObj = new FriendModel({
+            owner: savedUser._id
+        });
+        await friendObj.save();
+
         await runNeo4jQuery(queryAddUserNode, queryParam);
         return savedUser;
     }
@@ -74,6 +88,94 @@ class UserDao {
     public async auth(idToken: string): Promise<auth.DecodedIdToken> {
         const result = await firebaseDao.verifyIdToken(idToken);
         return result;
+    }
+
+    public async sendFriendRequest(fromUser: string, toUser: string): Promise<void> {
+        const isFriendRequestExisted = await FriendRequestModel.findOne({
+            from: fromUser,
+            to: toUser,
+        });
+
+        const fromUserFriends = await FriendModel.findOne({owner: fromUser}).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const isFriended = fromUserFriends.friends.findIndex(f => f == toUser) > -1; 
+
+        if(isFriendRequestExisted || isFriended) {
+            throw new Error(ErrorMessages.FRIEND_REQUEST_EXISTED);
+        }
+
+        const friendRequest = new FriendRequestModel({
+            from: fromUser,
+            to: toUser,
+            createdDate: new Date(),
+            message: ''
+        });
+
+        // TODO: Send notification to requested user here
+        await friendRequest.save();
+    }
+
+    public async deleteFriendRequest(fromUser: string, toUser: string): Promise<void> {
+        const friendRequest = await FriendRequestModel.findOne({
+            from: fromUser,
+            to: toUser,
+        }).orFail(new Error(ErrorMessages.NOT_FOUND));
+       
+        await friendRequest.delete();
+    }
+
+    public async addFriend(fromUser: string, toUser: string): Promise<void> {
+        const friendObj = await FriendModel.findOne({ owner: fromUser }).orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        const isAlreadyFriend = friendObj.friends.findIndex(f => f == toUser) > -1;
+        if (!isAlreadyFriend) {
+            friendObj.friends.push(toUser);
+            await friendObj.save();
+
+            const queryAddFriend = `
+            MATCH (u1:User {uid: $uid1})
+            MATCH (u2:User {uid: $uid2})
+            MERGE (u1)-[:FRIENDED]->(u2)`;
+            const queryParams = {
+                uid1: fromUser,
+                uid2: toUser
+            }
+            await runNeo4jQuery(queryAddFriend, queryParams);
+ 
+        }
+        else {
+            throw new Error(ErrorMessages.ACTION_DISMISS);
+        }
+    }
+
+    public async unFriend(fromUser: string, toUser: string): Promise<void> {
+        const friendObj = await FriendModel.findOne({ owner: fromUser }).orFail(new Error(ErrorMessages.NOT_FOUND));
+
+        const isAlreadyFriend = friendObj.friends.findIndex(f => f == toUser) > -1;
+        if (isAlreadyFriend) {
+            friendObj.friends = friendObj.friends.filter(f => f != toUser);
+            await friendObj.save();
+
+            const queryAddFriend = `
+            MATCH (u1:User {uid: $uid1})-[r:FRIENDED]->(u2:User {uid: $uid2})
+            DELETE r`;
+            const queryParams = {
+                uid1: fromUser,
+                uid2: toUser
+            }
+            await runNeo4jQuery(queryAddFriend, queryParams);
+ 
+        }
+        else {
+            throw new Error(ErrorMessages.ACTION_DISMISS);
+        }
+    }
+
+    public async getFriends(userId: string): Promise<any> {
+        const friendObj = await FriendModel.findOne({owner: userId})
+                                        .populate({ path: 'friends', select: 'firstName lastName avatar type' })
+                                        .orFail(new Error(ErrorMessages.NOT_FOUND));
+        
+        return friendObj.friends;
     }
 
     public async follow(sourceUserId: string, targetUserId: string): Promise<void> {
@@ -88,8 +190,7 @@ class UserDao {
             const queryFollowUserNode = `
                 MATCH (u1:User {uid: $uid1})
                 MATCH (u2:User {uid: $uid2})
-                MERGE (u1)-[:FOLLOWED]->(u2)
-            `;
+                MERGE (u1)-[:FOLLOWED]->(u2)`;
 
             const queryParams = {
                 uid1: sourceUserId,
@@ -101,9 +202,6 @@ class UserDao {
             await sourceFollow.save();
             await targetFollow.save();
         }
-        else {
-            throw ErrorMessages.ALREADY_FOLLOWED;
-        }
     }
 
     public async unfollow(sourceUserId: string, targetUserId: string): Promise<void> {
@@ -112,8 +210,7 @@ class UserDao {
 
         const queryUnfollowUserNode = `
                 MATCH (u1:User {uid: $uid1})-[r:FOLLOWED]->(u2:User {uid: $uid2})
-                DELETE r
-            `;
+                DELETE r`;
         const queryParams = {
             uid1: sourceUserId,
             uid2: targetUserId
@@ -137,7 +234,7 @@ class UserDao {
 
         const startIndex = (page - 1) * limit;
         const endIndex = page * limit;
-        
+
         const follow: any = await FollowModel.findOne({ owner: id }, { _id: 0, followers: { $slice: [startIndex, endIndex] } })
             .populate({ path: 'followers', select: 'firstName lastName avatar type' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
@@ -192,17 +289,16 @@ class UserDao {
     }
 
 
-    public async searchUser( searchParam: string): Promise<User[]>{
+    public async searchUser(searchParam: string): Promise<User[]> {
 
-        const userResult: User[] =  await UserModel.find({ 
-            $or:[
-                    {"firstName": {'$regex': searchParam, $options:"i"}},
-                    {"lastName": {'$regex': searchParam, $options:"i"}}
-                
-            ] 
-            
+        const userResult: User[] = await UserModel.find({
+            $or: [
+                { "firstName": { '$regex': searchParam, $options: "i" } },
+                { "lastName": { '$regex': searchParam, $options: "i" } }
+
+            ]
         }).limit(DEFAULT_LIMIT_USERS_RENDER)
-        if(userResult){
+        if (userResult) {
             return userResult;
         }
         throw new Error('User not found!');

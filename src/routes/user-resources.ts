@@ -90,6 +90,105 @@ export async function getTokenFromUid(req: Request, res: Response): Promise<Resp
     }
 }
 
+export async function sendFriendRequest(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if (req.params.authUser) {
+        try {
+            const authUser = JSON.parse(req.params.authUser) as User;
+            await userDao.sendFriendRequest(authUser._id, id);
+
+            return res.status(OK).json();
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+/**
+ * approve friend request from user
+ * @param req http request
+ * @param res http response
+ * @returns {Promise}
+ */
+export async function approveFriendRequest(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if (req.params.authUser) {
+        try {
+            const authUser = JSON.parse(req.params.authUser) as User;
+
+            await userDao.addFriend(id, authUser._id);
+            await userDao.addFriend(authUser._id, id);
+            await userDao.deleteFriendRequest(id, authUser._id);
+
+            return res.status(OK).json();
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+/**
+ * reject friend request from user
+ * @param req http request
+ * @param res http response
+ * @returns {Promise}
+ */
+export async function rejectFriendRequest(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if (req.params.authUser) {
+        try {
+            const authUser = JSON.parse(req.params.authUser) as User;
+
+            await userDao.deleteFriendRequest(id, authUser._id);
+            return res.status(OK).json();
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function unFriend(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if (req.params.authUser) {
+        try {
+            const authUser = JSON.parse(req.params.authUser) as User;
+
+            await userDao.unfollow(authUser._id, id);
+            await userDao.unFriend(authUser._id, id);
+            return res.status(OK).json();
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function getFriends(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const friends = await userDao.getFriends(id);
+
+    return res.status(OK).json(friends);
+}
+
 export async function follow(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
     if (req.params.authUser) {
@@ -152,7 +251,7 @@ export async function getFollowings(req: Request, res: Response): Promise<Respon
         const followings = await userDao.getFollowings(id, page, limit);
         return res.status(OK).json(followings);
     }
-    catch(error) {
+    catch (error) {
         logger.err(error);
         return res.status(BAD_REQUEST).json(error);
     }
@@ -162,7 +261,7 @@ export async function update(req: Request, res: Response): Promise<Response> {
     const authUser: User = JSON.parse(req.params.authUser);
     const id = authUser._id;
     try {
-         await userDao.updateUser(req.body, id);
+        await userDao.updateUser(req.body, id);
         return res.status(OK).json();
     }
     catch (error) {
@@ -170,12 +269,12 @@ export async function update(req: Request, res: Response): Promise<Response> {
     }
 }
 
-export async  function getUserLogin(req:Request, res:Response): Promise<Response> {
+export async function getUserLogin(req: Request, res: Response): Promise<Response> {
     const authUserLogin: User = JSON.parse(req.params.authUser);
     const id = authUserLogin._id;
 
     try {
-        const userLogin = await userDao.getOneById(authUserLogin._id, id);
+        const userLogin = await userDao.getById(id);
         return res.status(OK).json(userLogin);
     }
     catch (error) {
@@ -184,13 +283,12 @@ export async  function getUserLogin(req:Request, res:Response): Promise<Response
 }
 
 export async function searchByUser(req: Request, res: Response) {
-     const  search: any = req.query.search;
-    //console.log(typeof search);
-    try{
+    const search: any = req.query.search;
+    try {
         const userResult: User[] = await userDao.searchUser(search);
         return res.status(OK).json(userResult);
     }
-    catch(error){
+    catch (error) {
         return res.status(NOT_FOUND).json(error);
     }
 }

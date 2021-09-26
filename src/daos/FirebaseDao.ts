@@ -1,11 +1,13 @@
 import { auth } from 'firebase-admin';
 import FirebaseUser from '@entities/FireBaseUser';
-import { firebaseAdminAuth } from '@config/firebase';
-
+import { firebaseAdminAuth, firebaseMessaging } from '@config/firebase';
+import FirebaseNotificationMessageTopic from 'src/@types/express/FirebaseMessage';
+import logger from '@shared/Logger';
 
 export interface IFirebaseDao {
     importUsers: (users: [FirebaseUser]) => Promise<any>;
     verifyIdToken: (idToken: string) => Promise<auth.DecodedIdToken>;
+    sendPushMessageToTopic: (pushNotificationMessage: FirebaseNotificationMessageTopic) => Promise<void>
 }
 
 class FirebaseDao implements IFirebaseDao {
@@ -19,6 +21,7 @@ class FirebaseDao implements IFirebaseDao {
             return result;
         }
         catch (error) {
+            logger.err(error);
             throw error;
         }
     }
@@ -30,6 +33,7 @@ class FirebaseDao implements IFirebaseDao {
             return decodedToken;
         }
         catch(error){
+            logger.err(error);
             throw error;
         }
     }
@@ -39,6 +43,16 @@ class FirebaseDao implements IFirebaseDao {
         return result        
     }
 
+    public async sendPushMessageToTopic(pushNotificationMessage: FirebaseNotificationMessageTopic): Promise<void> {
+        try {
+            const sendNotificationResult = await firebaseMessaging.send(pushNotificationMessage);
+            logger.info(sendNotificationResult);
+        }
+        catch(error) {
+            logger.err(error);
+            throw error;
+        }
+    }
 }
 
 export default FirebaseDao;

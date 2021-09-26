@@ -8,5 +8,7 @@ const firebaseAdminApp = admin.initializeApp({
     credential: admin.credential.cert(serviceAccount)
 });
 
+export const firebaseMessaging = admin.messaging();
+
 
 export const firebaseAdminAuth = firebaseAdminApp.auth();
