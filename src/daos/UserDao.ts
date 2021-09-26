@@ -1,13 +1,12 @@
-import FollowModel, { Follow } from '@entities/Follow';
-import UserModel, { User } from '@entities/User';
-import { auth } from 'firebase-admin';
 import { runNeo4jQuery } from '@config/neo4j';
 import ErrorMessages from '@constant/errors';
-import FirebaseDao from './FirebaseDao';
-import UserDetail from '@entities/UserDetail';
+import FollowModel, { Follow } from '@entities/Follow';
 import FriendModel from '@entities/Friend';
 import FriendRequestModel from '@entities/FriendRequest';
-import mongoose from 'mongoose';
+import UserModel, { User } from '@entities/User';
+import UserDetail from '@entities/UserDetail';
+import { auth } from 'firebase-admin';
+import FirebaseDao from './FirebaseDao';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
 const firebaseDao = new FirebaseDao();
@@ -140,7 +139,7 @@ class UserDao {
                 uid2: toUser
             }
             await runNeo4jQuery(queryAddFriend, queryParams);
- 
+            await this.follow(fromUser, toUser);
         }
         else {
             throw new Error(ErrorMessages.ACTION_DISMISS);

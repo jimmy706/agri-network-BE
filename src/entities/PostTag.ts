@@ -12,9 +12,9 @@ export const PostTagSchema = new Schema<PostTag>({
     name: {
         type: String,
         unique: true,
-        require: true
+        require: true,
+        length: 24
     }
-    
 });
 
 const PostTagModel = model<PostTag>('PostTag', PostTagSchema);
