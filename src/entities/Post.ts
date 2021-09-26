@@ -16,6 +16,7 @@ export interface Post extends Document{
     format: PostFormat;
     ref: any;
     images: string[];
+    tags: string[];
 }
 
 
@@ -52,7 +53,8 @@ export const PostSchema = new Schema<Post>({
         require: false,
         type: Schema.Types.Mixed
     },
-    images: [String]
+    images: [String],
+    tags: [String]
 });
 
 PostSchema.plugin(mongoosePaginate);
