@@ -5,7 +5,7 @@ import PostReactionModel from "@entities/PostReaction";
 import { User } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
 import UserDao from "./UserDao";
-import PostTagModel, {PostTag} from "@entities/PostTag";
+
 
 export const DEFAULT_LIMIT_POST = 6;
 
@@ -191,8 +191,4 @@ export default class PostDao {
     }
 
 
-    public async getPostTag(): Promise<PostTag[]>{
-        const result = await PostTagModel.find();
-        return result
-    }
 }
