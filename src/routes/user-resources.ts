@@ -292,3 +292,4 @@ export async function searchByUser(req: Request, res: Response) {
         return res.status(NOT_FOUND).json(error);
     }
 }
+
