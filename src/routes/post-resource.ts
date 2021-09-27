@@ -6,7 +6,7 @@ import logger from "@shared/Logger";
 import { Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import SuccessMessages from "@constant/success";
-import {PostTag} from "@entities/PostTag";
+
 
 interface AddNewPostRequest extends Request {
     body: Post
@@ -203,14 +203,4 @@ export async function addComment(req: Request, res: Response): Promise<Response>
 }
 
 
-export async function getPostTag(req: Request, res: Response): Promise<Response>{
-    try{ 
-        const postTag: PostTag[] = await postDao.getPostTag();
-        return   res.status(OK).json(postTag);
-    }
-    catch(error){
-        logger.err(error);
-        return res.status(BAD_REQUEST).json(error);
 
-    }
-}
