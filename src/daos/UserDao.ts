@@ -6,6 +6,7 @@ import FriendRequestModel from '@entities/FriendRequest';
 import UserModel, { User } from '@entities/User';
 import UserDetail from '@entities/UserDetail';
 import { auth } from 'firebase-admin';
+import { FirebaseMessageTypes, FirebsaeMessage } from 'src/@types/express/FirebaseMessage';
 import FirebaseDao from './FirebaseDao';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
@@ -35,12 +36,21 @@ class UserDao {
     public async getOneById(currentLoginUserId: string, id: string): Promise<UserDetail> {
         const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
         const follow = await FollowModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const friendObj = await FriendModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isFollowed: boolean = follow.followers.findIndex(f => f == currentLoginUserId) > -1;
         const numberOfFollowers: number = follow.followers.length;
         const numberOfFollowings: number = follow.followings.length;
+        const numberOfFriends: number = friendObj.friends.length;
+        const isFriend = friendObj.friends.findIndex(f => f == currentLoginUserId) > -1;
 
-        const userDetail: UserDetail = { ...user.toObject(), isFollowed, numberOfFollowers, numberOfFollowings };
+        const friendRequest = await FriendRequestModel.findOne({
+            from: id,
+            to: currentLoginUserId
+        });
+        const hasFriendRequest = friendRequest == null || undefined ? false : true;
+
+        const userDetail: UserDetail = { ...user.toObject(), isFollowed, isFriend, numberOfFollowers, numberOfFollowings, numberOfFriends, hasFriendRequest };
         return userDetail;
     }
 
@@ -94,11 +104,11 @@ class UserDao {
             from: fromUser,
             to: toUser,
         });
+        const fromUser_userObject = await UserModel.findById(fromUser).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const fromUserFriends = await FriendModel.findOne({ owner: fromUser }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const isFriended = fromUserFriends.friends.findIndex(f => f == toUser) > -1;
 
-        const fromUserFriends = await FriendModel.findOne({owner: fromUser}).orFail(new Error(ErrorMessages.NOT_FOUND));
-        const isFriended = fromUserFriends.friends.findIndex(f => f == toUser) > -1; 
-
-        if(isFriendRequestExisted || isFriended) {
+        if (isFriendRequestExisted || isFriended) {
             throw new Error(ErrorMessages.FRIEND_REQUEST_EXISTED);
         }
 
@@ -109,8 +119,17 @@ class UserDao {
             message: ''
         });
 
-        // TODO: Send notification to requested user here
         await friendRequest.save();
+
+        // Send notification to requested user here
+        const notificationMessage: FirebsaeMessage = {
+            title: "Lời mời kết bạn mới",
+            message: `Bạn vừa nhận một lời mời kết bạn từ ${fromUser_userObject.firstName} ${fromUser_userObject.lastName}`,
+            fromUser,
+            toUser,
+            type: FirebaseMessageTypes.FRIEND_REQUEST,
+        };
+        await firebaseDao.sendPushMessageToTopic(`add_friend_to_${toUser}`, notificationMessage);
     }
 
     public async deleteFriendRequest(fromUser: string, toUser: string): Promise<void> {
@@ -118,7 +137,7 @@ class UserDao {
             from: fromUser,
             to: toUser,
         }).orFail(new Error(ErrorMessages.NOT_FOUND));
-       
+
         await friendRequest.delete();
     }
 
@@ -162,7 +181,7 @@ class UserDao {
                 uid2: toUser
             }
             await runNeo4jQuery(queryAddFriend, queryParams);
- 
+
         }
         else {
             throw new Error(ErrorMessages.ACTION_DISMISS);
@@ -170,10 +189,10 @@ class UserDao {
     }
 
     public async getFriends(userId: string): Promise<any> {
-        const friendObj = await FriendModel.findOne({owner: userId})
-                                        .populate({ path: 'friends', select: 'firstName lastName avatar type' })
-                                        .orFail(new Error(ErrorMessages.NOT_FOUND));
-        
+        const friendObj = await FriendModel.findOne({ owner: userId })
+            .populate({ path: 'friends', select: 'firstName lastName avatar type' })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
+
         return friendObj.friends;
     }
 

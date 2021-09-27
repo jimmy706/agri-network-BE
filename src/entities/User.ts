@@ -16,6 +16,7 @@ export interface User {
     type: UserType;
     _id: string;
     isFollowed?: boolean;
+    isFriend?: boolean;
 }
 
 export type SimpleUser = {
