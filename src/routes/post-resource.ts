@@ -6,6 +6,7 @@ import logger from "@shared/Logger";
 import { Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import SuccessMessages from "@constant/success";
+import {PostTag} from "@entities/PostTag";
 
 interface AddNewPostRequest extends Request {
     body: Post
@@ -15,6 +16,7 @@ const { BAD_REQUEST, CREATED, UNAUTHORIZED, OK, NOT_FOUND } = StatusCodes;
 
 
 const postDao = new PostDao();
+
 
 export async function add(req: AddNewPostRequest, res: Response): Promise<Response> {
     if (req.params.authUser) {
@@ -197,5 +199,18 @@ export async function addComment(req: Request, res: Response): Promise<Response>
     }
     else {
         return res.status(UNAUTHORIZED).json();
+    }
+}
+
+
+export async function getPostTag(req: Request, res: Response): Promise<Response>{
+    try{ 
+        const postTag: PostTag[] = await postDao.getPostTag();
+        return   res.status(OK).json(postTag);
+    }
+    catch(error){
+        logger.err(error);
+        return res.status(BAD_REQUEST).json(error);
+
     }
 }
