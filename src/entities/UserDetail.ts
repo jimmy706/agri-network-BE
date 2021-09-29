@@ -5,4 +5,5 @@ export default interface UserDetail extends User {
     numberOfFollowings: number;
     numberOfFriends: number;
     hasFriendRequest: boolean;
+    pendingFriendRequest: boolean;
 }

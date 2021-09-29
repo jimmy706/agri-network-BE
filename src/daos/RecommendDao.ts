@@ -1,14 +1,15 @@
 import { runNeo4jQuery } from "@config/neo4j";
-import UserModel, { User } from "@entities/User";
+import FriendRequestModel from "@entities/FriendRequest";
+import UserModel, { RecommendUser, User } from "@entities/User";
 import mongoose from 'mongoose';
 import { DEFAULT_LIMIT_USERS_RENDER } from "./UserDao";
 
 class RecommendDao {
-    public async getRecommendedUsers(userId: String): Promise<User[]> {
+    public async getRecommendedUsers(userId: string): Promise<RecommendUser[]> {
 
         // Query users in same province and NOT followed current user
         const queryString = `MATCH (u{uid: $uid})-[:LIVED_IN]->(p1)<-[:LIVED_IN]-(other)
-        WHERE NOT (u)-[:FOLLOWED]->(other)
+        WHERE NOT (u)-[:FRIENDED]->(other)
         RETURN other.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}`;
 
         const queryParams = {
@@ -23,8 +24,8 @@ class RecommendDao {
         }
 
         // Query FOAF
-        const queryStringFoaf = `MATCH (u:User {uid: $uid})-[:FOLLOWED]->(other:User)<-[:FOLLOWED]-(foaf:User)
-        WHERE NOT (u)-[:FOLLOWED]->(foaf) AND foaf.uid <> $uid
+        const queryStringFoaf = `MATCH (u:User {uid: $uid})-[:FRIENDED]->(other:User)<-[:FRIENDED]-(foaf:User)
+        WHERE NOT (u)-[:FRIENDED]->(foaf) AND foaf.uid <> $uid
         RETURN foaf.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}`;
         const queryParamsFoaf = {
             uid: userId
@@ -37,13 +38,25 @@ class RecommendDao {
         }
 
         const uidsToObjectIds: any = Array.from(uids).map(uid => mongoose.Types.ObjectId(uid));
-        const users = UserModel.find({
+        const users = await UserModel.find({
             _id: {
                 $in: uidsToObjectIds
             }
         });
 
-        return users;
+        const friendRequestExits = await Promise.all(users.map(u => {
+            const friendRequest = FriendRequestModel.findOne({from: userId, to: u._id});
+            return friendRequest;
+        }));
+
+
+        const result: RecommendUser[] = [];
+        for(let i = 0; i < users.length; i++) {
+            const pendingFriendRequest = friendRequestExits[i] == null || undefined ? false : true;
+            result.push({...users[i].toObject(), pendingFriendRequest, isFriend: false});
+        }
+
+        return result;
     }
 }
 

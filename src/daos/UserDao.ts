@@ -50,7 +50,18 @@ class UserDao {
         });
         const hasFriendRequest = friendRequest == null || undefined ? false : true;
 
-        const userDetail: UserDetail = { ...user.toObject(), isFollowed, isFriend, numberOfFollowers, numberOfFollowings, numberOfFriends, hasFriendRequest };
+        const pendingFriendRequest = await FriendRequestModel.findOne({ from: currentLoginUserId, to: id }) == null || undefined ? false : true;
+
+        const userDetail: UserDetail = {
+            ...user.toObject(),
+            isFollowed,
+            isFriend,
+            numberOfFollowers,
+            numberOfFollowings,
+            numberOfFriends,
+            hasFriendRequest,
+            pendingFriendRequest
+        };
         return userDetail;
     }
 
@@ -65,7 +76,7 @@ class UserDao {
         return result;
     }
 
-   
+
 
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
@@ -167,7 +178,7 @@ class UserDao {
         }
     }
 
-    public async unFriend(fromUser: string, toUser: string): Promise<void> {
+    public async unfriend(fromUser: string, toUser: string): Promise<void> {
         const friendObj = await FriendModel.findOne({ owner: fromUser }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isAlreadyFriend = friendObj.friends.findIndex(f => f == toUser) > -1;
@@ -183,7 +194,6 @@ class UserDao {
                 uid2: toUser
             }
             await runNeo4jQuery(queryAddFriend, queryParams);
-
         }
         else {
             throw new Error(ErrorMessages.ACTION_DISMISS);

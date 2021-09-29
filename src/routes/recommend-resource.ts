@@ -4,7 +4,7 @@ import logger from "@shared/Logger";
 import { Request, Response } from "express";
 import StatusCodes from 'http-status-codes';
 
-const { BAD_REQUEST, CREATED, OK, UNAUTHORIZED, NOT_FOUND } = StatusCodes;
+const { BAD_REQUEST, OK, UNAUTHORIZED } = StatusCodes;
 
 const recommendDao: RecommendDao = new RecommendDao();
 

@@ -19,6 +19,10 @@ export interface User {
     isFriend?: boolean;
 }
 
+export interface RecommendUser extends User {
+    pendingFriendRequest: boolean;
+}
+
 export type SimpleUser = {
     displayName: string;
     avatar: string | null | undefined;

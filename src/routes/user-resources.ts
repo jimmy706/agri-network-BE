@@ -109,6 +109,18 @@ export async function sendFriendRequest(req: Request, res: Response): Promise<Re
     }
 }
 
+export async function cancelFriendRequest(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    if (req.params.authUser) {
+        const authUser = JSON.parse(req.params.authUser) as User;
+        await userDao.deleteFriendRequest(authUser._id, id);
+        return res.status(OK).json();
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();  
+    }
+}
+
 /**
  * approve friend request from user
  * @param req http request
@@ -162,14 +174,14 @@ export async function rejectFriendRequest(req: Request, res: Response): Promise<
     }
 }
 
-export async function unFriend(req: Request, res: Response): Promise<Response> {
+export async function unfriend(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
     if (req.params.authUser) {
         try {
             const authUser = JSON.parse(req.params.authUser) as User;
 
             await userDao.unfollow(authUser._id, id);
-            await userDao.unFriend(authUser._id, id);
+            await userDao.unfriend(authUser._id, id);
             return res.status(OK).json();
         }
         catch (error) {
