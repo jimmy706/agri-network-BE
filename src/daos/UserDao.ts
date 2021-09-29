@@ -2,7 +2,7 @@ import { runNeo4jQuery } from '@config/neo4j';
 import ErrorMessages from '@constant/errors';
 import FollowModel, { Follow } from '@entities/Follow';
 import FriendModel from '@entities/Friend';
-import FriendRequestModel from '@entities/FriendRequest';
+import FriendRequestModel, { FriendRequest } from '@entities/FriendRequest';
 import UserModel, { User } from '@entities/User';
 import UserDetail from '@entities/UserDetail';
 import { auth } from 'firebase-admin';
@@ -37,12 +37,13 @@ class UserDao {
         const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
         const follow = await FollowModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
         const friendObj = await FriendModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const currentLoginUserFriendObj = await FriendModel.findOne({ owner: currentLoginUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         const isFollowed: boolean = follow.followers.findIndex(f => f == currentLoginUserId) > -1;
         const numberOfFollowers: number = follow.followers.length;
         const numberOfFollowings: number = follow.followings.length;
         const numberOfFriends: number = friendObj.friends.length;
-        const isFriend = friendObj.friends.findIndex(f => f == currentLoginUserId) > -1;
+        const isFriend = currentLoginUserFriendObj.friends.findIndex(f => f == id) > -1;
 
         const friendRequest = await FriendRequestModel.findOne({
             from: id,
@@ -75,8 +76,6 @@ class UserDao {
         const result = await UserModel.find();
         return result;
     }
-
-
 
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
@@ -152,6 +151,14 @@ class UserDao {
         }).orFail(new Error(ErrorMessages.NOT_FOUND));
 
         await friendRequest.delete();
+    }
+
+    public async getAllFriendRequestsToUser(userId: string): Promise<FriendRequest[]> {
+        const friendRequests = await FriendRequestModel
+            .find({ to: userId })
+            .populate({ path: 'from', select: 'firstName lastName avatar type' });
+
+        return friendRequests;
     }
 
     public async addFriend(fromUser: string, toUser: string): Promise<void> {

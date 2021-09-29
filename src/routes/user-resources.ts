@@ -117,7 +117,7 @@ export async function cancelFriendRequest(req: Request, res: Response): Promise<
         return res.status(OK).json();
     }
     else {
-        return res.status(UNAUTHORIZED).json();  
+        return res.status(UNAUTHORIZED).json();
     }
 }
 
@@ -165,6 +165,24 @@ export async function rejectFriendRequest(req: Request, res: Response): Promise<
             return res.status(OK).json();
         }
         catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}
+
+export async function getAllFriendRequests(req: Request, res: Response): Promise<Response> {
+    if (req.params.authUser) {
+        try {
+            const authUser = JSON.parse(req.params.authUser) as User;
+            console.log(authUser);
+            const result = await userDao.getAllFriendRequestsToUser(authUser._id);
+            return res.status(OK).json(result);
+        }
+        catch(error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
