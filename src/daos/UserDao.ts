@@ -207,12 +207,12 @@ class UserDao {
         }
     }
 
-    public async getFriends(userId: string): Promise<any> {
-        const friendObj = await FriendModel.findOne({ owner: userId })
+    public async getFriends(userId: string): Promise<User[]> {
+        const friendObj: any = await FriendModel.findOne({ owner: userId })
             .populate({ path: 'friends', select: 'firstName lastName avatar type' })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
 
-        return friendObj.friends;
+        return friendObj.friends as User[];
     }
 
     public async follow(sourceUserId: string, targetUserId: string): Promise<void> {

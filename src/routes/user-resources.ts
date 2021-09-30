@@ -178,7 +178,6 @@ export async function getAllFriendRequests(req: Request, res: Response): Promise
     if (req.params.authUser) {
         try {
             const authUser = JSON.parse(req.params.authUser) as User;
-            console.log(authUser);
             const result = await userDao.getAllFriendRequestsToUser(authUser._id);
             return res.status(OK).json(result);
         }
