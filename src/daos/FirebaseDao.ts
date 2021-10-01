@@ -2,7 +2,7 @@ import { auth } from 'firebase-admin';
 import FirebaseUser from '@entities/FireBaseUser';
 import { firebaseAdminAuth, firebaseMessaging } from '@config/firebase';
 import logger from '@shared/Logger';
-import { FirebsaeMessage } from 'src/@types/express/FirebaseMessage';
+import { FirebsaeMessage } from '@entities/FirebaseMessage';
 
 export interface IFirebaseDao {
     importUsers: (users: [FirebaseUser]) => Promise<any>;

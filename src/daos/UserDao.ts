@@ -6,7 +6,7 @@ import FriendRequestModel, { FriendRequest } from '@entities/FriendRequest';
 import UserModel, { User } from '@entities/User';
 import UserDetail from '@entities/UserDetail';
 import { auth } from 'firebase-admin';
-import { FirebaseMessageTypes, FirebsaeMessage } from 'src/@types/express/FirebaseMessage';
+import { FirebaseMessageTypes, FirebsaeMessage } from '@entities/FirebaseMessage';
 import FirebaseDao from './FirebaseDao';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
