@@ -59,6 +59,19 @@ export async function getDecodedToken(req: Request, res: Response): Promise<Resp
     }
 }
 
+export async function deleteAccount(req: Request, res: Response): Promise<Response> {
+    try {
+        const idToken = req.headers.authorization as string;
+        await userDao.deleteAccount(idToken);
+
+        return res.status(OK).json();
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(UNAUTHORIZED).json(error);
+    }
+}
+
 export async function auth(req: Request, res: Response, next: NextFunction): Promise<void> {
     try {
         const idToken = req.headers.authorization;

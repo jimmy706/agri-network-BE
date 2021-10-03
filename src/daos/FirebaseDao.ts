@@ -54,6 +54,10 @@ class FirebaseDao implements IFirebaseDao {
             throw error;
         }
     }
+
+    public async deleteUser(uid: string): Promise<void> {
+        await firebaseAdminAuth.deleteUser(uid);
+    }
 }
 
 export default FirebaseDao;

@@ -1,4 +1,5 @@
 import { Schema, model } from 'mongoose';
+import { Location, LocationSchema } from './Location';
 
 export enum UserType {
     SUPPLIER = "Nhà cung cấp",
@@ -12,11 +13,14 @@ export interface User {
     email: string;
     avatar?: string;
     province: string;
+    district: string;
+    ward: string;
     phoneNumber: string;
     type: UserType;
     _id: string;
     isFollowed?: boolean;
     isFriend?: boolean;
+    location: Location
 }
 
 export interface RecommendUser extends User {
@@ -35,6 +39,8 @@ export const UserSchema = new Schema<User>({
     avatar: { type: String, require: false },
     email: { type: String, require: true, unique: true },
     province: { type: String, require: true },
+    district: { type: String, require: true, default: "" },
+    ward: { type: String, require: true, default: "" },
     phoneNumber: { type: String, require: true },
     type: {
         type: String, enum: [
@@ -43,6 +49,7 @@ export const UserSchema = new Schema<User>({
             UserType.SUPPLIER
         ], require: true, default: UserType.PRODUCER
     },
+    location: LocationSchema
 });
 
 const UserModel = model<User>('User', UserSchema);

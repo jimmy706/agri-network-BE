@@ -3,7 +3,8 @@ import * as userResource from './user-resources';
 
 const userRouter = Router();
 userRouter.post('/', userResource.add);
-userRouter.get('/', userResource.auth, userResource.getUserLogin)
+userRouter.get('/', userResource.auth, userResource.getUserLogin);
+userRouter.delete('/', userResource.auth, userResource.deleteAccount);
 userRouter.get('/friend-request', userResource.auth, userResource.getAllFriendRequests);
 userRouter.patch('/', userResource.auth, userResource.update);
 userRouter.get('/getDecodedToken', userResource.getDecodedToken);

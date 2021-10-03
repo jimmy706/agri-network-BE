@@ -80,17 +80,19 @@ class UserDao {
     public async add(user: User): Promise<User> {
         const newUser = new UserModel(user);
         const savedUser = await newUser.save();
-        const { firstName, lastName, email, province } = savedUser;
+        const { firstName, lastName, email, province, district, ward } = savedUser;
         const queryAddUserNode = `
             MATCH (p:Province{name: $province}) 
-            CREATE (u:User {name: $name, email: $email, uid: $uid})
+            CREATE (u:User {name: $name, email: $email, uid: $uid, district: $district, ward: $ward})
             CREATE (u)-[:LIVED_IN]->(p)
             `;
         const queryParam = {
             name: `${firstName} ${lastName}`,
             email,
             province,
-            uid: String(savedUser._id)
+            uid: String(savedUser._id),
+            district,
+            ward
         };
         const newFollowObj = new FollowModel({
             owner: savedUser._id
@@ -315,16 +317,56 @@ class UserDao {
     }
 
 
-    public async updateUser(user: User, id: string): Promise<void> {
-        await UserModel.updateOne({ _id: id }, {
-            firstName: user.firstName,
-            lastName: user.lastName,
-            province: user.province,
-            phoneNumber: user.phoneNumber,
-            avatar: user.avatar
-        }).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+    public async updateUser(updatedUser: User, id: string): Promise<void> {
+        const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const { firstName, lastName, location, avatar, province, district, ward } = updatedUser;
+        user.firstName = firstName;
+        user.lastName = lastName;
+        user.location = location;
+        user.avatar = avatar;
+        if (user.province != updatedUser.province) {
+            const deleteProvinceRelationship = `MATCH (u{uid: $uid})-[r:LIVED_IN]->(p:Province) DELETE r`;
+            const deleteQueryParam = {
+                uid: id,
+            }
+            await runNeo4jQuery(deleteProvinceRelationship, deleteQueryParam);
+        }
+        user.province = province;
+        user.district = district;
+        user.ward = ward;
+        const updateUserQuery = `
+        MATCH (p:Province{name: $province}) 
+        MATCH (u{uid: $uid}) 
+        SET u.district = $district, u.ward = $ward
+        MERGE (u)-[:LIVED_IN]->(p)`;
+        const updateUserQueryParam = {
+            province,
+            uid: id,
+            district,
+            ward
+        };
+        await runNeo4jQuery(updateUserQuery, updateUserQueryParam);
+
+        await user.save();
     }
 
+    public async deleteAccount(idToken: string): Promise<void> {
+        const decodedToken = await this.auth(idToken);
+        await firebaseDao.deleteUser(decodedToken.uid);
+
+        const email = decodedToken.email as string;
+        const user = await UserModel.findOneAndDelete({email}).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const userId = String(user._id);
+
+        await FollowModel.deleteOne({ owner: userId });
+        await FriendModel.deleteOne({ owner: userId });
+
+        const deleteUserQuery = `MATCH (u:User { uid: $uid }) DETACH DELETE u`;
+        const deleteUserQueryParam = {
+            uid: userId
+        };
+        await runNeo4jQuery(deleteUserQuery, deleteUserQueryParam);
+    }
 
     public async searchUser(searchParam: string): Promise<User[]> {
 
@@ -335,10 +377,7 @@ class UserDao {
 
             ]
         }).limit(DEFAULT_LIMIT_USERS_RENDER)
-        if (userResult) {
-            return userResult;
-        }
-        throw new Error('User not found!');
+        return userResult;
     }
 }
 
