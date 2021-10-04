@@ -54,7 +54,8 @@ export default class PostDao {
             numberOfReactions: postReactions.reactions.length,
             numberOfComments: postComments.comments.length,
             comments: postComments.comments,
-            isLiked
+            isLiked,
+            tags: post.tags
         };
     }
 
@@ -113,9 +114,9 @@ export default class PostDao {
         const paginateOptions: PaginateOptions = {
             page,
             limit,
-            select: 'lastModified format images _id content postedBy',
+            select: 'lastModified format images _id content postedBy tags',
             sort: { createdDate: 'desc' },
-            populate: { path: 'postedBy', select: 'firstName lastName avatar' },
+            populate: { path: 'postedBy', select: 'firstName lastName avatar ' },
         }
 
         const posts: PaginateResult<Post> = await new Promise((resolve, reject) => {
@@ -148,9 +149,9 @@ export default class PostDao {
         const paginateOptions: PaginateOptions = {
             page,
             limit,
-            select: 'lastModified format images _id content postedBy',
+            select: 'lastModified format images _id content postedBy tags',
             sort: { createdDate: 'desc' },
-            populate: { path: 'postedBy', select: 'firstName lastName avatar' },
+            populate: { path: 'postedBy', select: 'firstName lastName avatar ' },
         }
 
         const followers: User[] = await userDao.getFollowings(userId);
