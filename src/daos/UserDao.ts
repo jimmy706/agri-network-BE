@@ -8,6 +8,7 @@ import UserDetail from '@entities/UserDetail';
 import { auth } from 'firebase-admin';
 import { FirebaseMessageTypes, FirebsaeMessage } from '@entities/FirebaseMessage';
 import FirebaseDao from './FirebaseDao';
+import { Location } from '@entities/Location';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 10;
 const firebaseDao = new FirebaseDao();
@@ -316,8 +317,7 @@ class UserDao {
         }
     }
 
-
-    public async updateUser(updatedUser: User, id: string): Promise<void> {
+    public async update(updatedUser: User, id: string): Promise<void> {
         const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
         const { firstName, lastName, location, avatar, province, district, ward } = updatedUser;
         user.firstName = firstName;
@@ -348,6 +348,15 @@ class UserDao {
         await runNeo4jQuery(updateUserQuery, updateUserQueryParam);
 
         await user.save();
+    }
+
+    public async updateLocation(newLocation: Location, userId: string): Promise<void> {
+        const user = await UserModel.findById(userId).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const oldLocation = user.location;
+        if(oldLocation.lat != newLocation.lat && oldLocation.lng != newLocation.lng) {
+            user.location = newLocation;
+            await user.save();
+        }
     }
 
     public async deleteAccount(idToken: string): Promise<void> {

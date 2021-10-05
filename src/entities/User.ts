@@ -25,6 +25,7 @@ export interface User {
 
 export interface RecommendUser extends User {
     pendingFriendRequest: boolean;
+    distance?: number;
 }
 
 export type SimpleUser = {

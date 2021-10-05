@@ -14,11 +14,11 @@ export const LocationSchema = new Schema<Location>({
     lat: {
         type: Number,
         require: true,
-        default: -1,
+        default: -360,
     },
     lng: {
         type: Number,
         require: true,
-        default: -1
+        default: -360
     }
 });

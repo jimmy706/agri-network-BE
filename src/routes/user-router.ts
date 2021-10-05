@@ -7,6 +7,7 @@ userRouter.get('/', userResource.auth, userResource.getUserLogin);
 userRouter.delete('/', userResource.auth, userResource.deleteAccount);
 userRouter.get('/friend-request', userResource.auth, userResource.getAllFriendRequests);
 userRouter.patch('/', userResource.auth, userResource.update);
+userRouter.put('/update-location', userResource.auth, userResource.updateLocation);
 userRouter.get('/getDecodedToken', userResource.getDecodedToken);
 userRouter.get('/:id', userResource.auth, userResource.getbyId);
 userRouter.post('/:id/follow', userResource.auth, userResource.follow);

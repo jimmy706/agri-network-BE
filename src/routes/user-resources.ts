@@ -4,6 +4,7 @@ import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import SuccessMessages from '@constant/success';
+import { Location } from '@entities/Location';
 
 
 const userDao = new UserDao();
@@ -66,7 +67,7 @@ export async function deleteAccount(req: Request, res: Response): Promise<Respon
 
         return res.status(OK).json();
     }
-    catch(error) {
+    catch (error) {
         logger.err(error);
         return res.status(UNAUTHORIZED).json(error);
     }
@@ -194,7 +195,7 @@ export async function getAllFriendRequests(req: Request, res: Response): Promise
             const result = await userDao.getAllFriendRequestsToUser(authUser._id);
             return res.status(OK).json(result);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -303,11 +304,31 @@ export async function update(req: Request, res: Response): Promise<Response> {
     const authUser: User = JSON.parse(req.params.authUser);
     const id = authUser._id;
     try {
-        await userDao.updateUser(req.body, id);
+        await userDao.update(req.body, id);
         return res.status(OK).json();
     }
     catch (error) {
         return res.status(NOT_FOUND).json(error);
+    }
+}
+
+export async function updateLocation(req: Request, res: Response): Promise<Response> {
+    if (req.params.authUser) {
+        try {
+            const { lat, lng } = req.body;
+            const authUser = JSON.parse(req.params.authUser) as User;
+            const newLocation: Location = new Location(lat, lng);
+
+            await userDao.updateLocation(newLocation, authUser._id);
+            return res.status(OK).json();
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
     }
 }
 

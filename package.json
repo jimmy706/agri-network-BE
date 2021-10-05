@@ -25,7 +25,8 @@
     "@shared": "dist/shared",
     "@server": "dist/Server",
     "@config": "dist/config",
-    "@constant": "dist/constant"
+    "@constant": "dist/constant",
+    "@utils": "dist/utils"
   },
   "eslintConfig": {
     "parser": "@typescript-eslint/parser",
