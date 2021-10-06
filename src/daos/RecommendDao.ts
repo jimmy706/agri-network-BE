@@ -8,24 +8,22 @@ import { Result } from "neo4j-driver-core";
 import { DEFAULT_LIMIT_USERS_RENDER } from "./UserDao";
 
 class RecommendDao {
+    private priority = ['ward', 'district', 'province']
+
     public async getRecommendedUsers(userId: string): Promise<RecommendUser[]> {
 
         const currentUser = await UserModel.findById(userId).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
         const uids = new Set<string>();
-        
-        const queryUsersInWard = await this.queryRecommendUserPlacesBaseOnCriteria(currentUser, 'ward');
+        let priorityIndex = 0;
 
-        for(let record of queryUsersInWard.records) {
-            const uid = record.get('other.uid');
-            uids.add(uid);
-        }
-
-        if(queryUsersInWard.records.length < DEFAULT_LIMIT_USERS_RENDER) {
-            const queryUsersInDistrict = await this.queryRecommendUserPlacesBaseOnCriteria(currentUser, 'district');
-            for(let record of queryUsersInDistrict.records) {
+        while(priorityIndex <= this.priority.length && uids.size < DEFAULT_LIMIT_USERS_RENDER) {
+            const queryUsers = await this.queryRecommendUserPlacesBaseOnCriteria(currentUser, this.priority[priorityIndex]);
+            for (let record of queryUsers.records) {
                 const uid = record.get('other.uid');
                 uids.add(uid);
             }
+
+            priorityIndex++;
         }
 
         // Query FOAF
@@ -37,7 +35,7 @@ class RecommendDao {
         };
 
         const queryFoafResult = await runNeo4jQuery(queryStringFoaf, queryParamsFoaf);
-        for(let record of queryFoafResult.records) {
+        for (let record of queryFoafResult.records) {
             const uid = record.get('foaf.uid');
             uids.add(uid);
         }
@@ -47,47 +45,64 @@ class RecommendDao {
             _id: {
                 $in: uidsToObjectIds
             }
-        });
+        }).select("firstName lastName _id email type avatar location");
 
         const friendRequestExits = await Promise.all(users.map(u => {
-            const friendRequest = FriendRequestModel.findOne({from: userId, to: u._id});
+            const friendRequest = FriendRequestModel.findOne({ from: userId, to: u._id });
             return friendRequest;
         }));
 
 
         const result: RecommendUser[] = [];
-        for(let i = 0; i < users.length; i++) {
+        for (let i = 0; i < users.length; i++) {
             const pendingFriendRequest = friendRequestExits[i] == null || undefined ? false : true;
-            result.push({...users[i].toObject(), pendingFriendRequest, isFriend: false});
+            result.push({ ...users[i].toObject(), pendingFriendRequest, isFriend: false });
         }
-        return result;
+        return this.sortRecommendUser(result, currentUser).slice(0, DEFAULT_LIMIT_USERS_RENDER);
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
         return arr.sort((u1, u2) => {
             const locationHandler = LocationHandler.getInstance();
+            u1.distance = -1;
+            u2.distance = -1;
 
             const l1 = u1.location;
             const l2 = u2.location;
 
-            if(locationHandler.isLocationValid(l1) && locationHandler.isLocationValid(l2) && locationHandler.isLocationValid(currentUser.location)) {
+            if (locationHandler.isLocationValid(l1) && locationHandler.isLocationValid(l2) && locationHandler.isLocationValid(currentUser.location)) {
                 const d1 = locationHandler.getDistance(currentUser.location, l1);
                 const d2 = locationHandler.getDistance(currentUser.location, l2);
-    
+
+                u1.distance = d1;
+                u2.distance = d2;
+
                 return d1 - d2;
             }
 
-           return 0;
+            return -1;
         });
     }
 
-    private queryRecommendUserPlacesBaseOnCriteria(currentUser: User, criteria: 'ward' | 'district'): Promise<Result> {
-         const queryString = `
+    private queryRecommendUserPlacesBaseOnCriteria(currentUser: any, criteria: string): Promise<Result> {
+        if (criteria != 'province') {
+            // Query in ward and district
+            const queryString = `
             MATCH (u{uid: "${currentUser._id}"})-[:LIVED_IN]->(p)<-[:LIVED_IN]-(other:User{${criteria}: "${currentUser[criteria]}"})
             WHERE NOT (u)-[:FRIENDED]->(other)
             RETURN other.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}
          `;
-         return runNeo4jQuery(queryString);
+            return runNeo4jQuery(queryString);
+        }
+        else {
+            // Query in province
+            const queryString = `
+            MATCH (u{uid: "${currentUser._id}"})-[:LIVED_IN]->(p)<-[:LIVED_IN]-(other)
+            WHERE NOT (u)-[:FRIENDED]->(other)
+            RETURN other.uid LIMIT ${DEFAULT_LIMIT_USERS_RENDER}`;
+
+            return runNeo4jQuery(queryString);
+        }
     }
 }
 

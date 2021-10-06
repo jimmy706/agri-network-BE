@@ -10,7 +10,7 @@ import { FirebaseMessageTypes, FirebsaeMessage } from '@entities/FirebaseMessage
 import FirebaseDao from './FirebaseDao';
 import { Location } from '@entities/Location';
 
-export const DEFAULT_LIMIT_USERS_RENDER = 10;
+export const DEFAULT_LIMIT_USERS_RENDER = 12;
 const firebaseDao = new FirebaseDao();
 
 export interface CountFollowingsAndFollowers {
@@ -352,8 +352,15 @@ class UserDao {
 
     public async updateLocation(newLocation: Location, userId: string): Promise<void> {
         const user = await UserModel.findById(userId).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        if (!user.location) {
+            user.location = {
+                lat: -360,
+                lng: -360
+            };
+        }
+
         const oldLocation = user.location;
-        if(oldLocation.lat != newLocation.lat && oldLocation.lng != newLocation.lng) {
+        if (oldLocation.lat != newLocation.lat && oldLocation.lng != newLocation.lng) {
             user.location = newLocation;
             await user.save();
         }
@@ -364,7 +371,7 @@ class UserDao {
         await firebaseDao.deleteUser(decodedToken.uid);
 
         const email = decodedToken.email as string;
-        const user = await UserModel.findOneAndDelete({email}).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const user = await UserModel.findOneAndDelete({ email }).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
         const userId = String(user._id);
 
         await FollowModel.deleteOne({ owner: userId });
