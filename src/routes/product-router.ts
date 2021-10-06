@@ -6,4 +6,5 @@ import * as userResource from './user-resources';
 const ProductRouter = Router();
 ProductRouter.get("/category", userResource.auth, productResource.getProductType);
 
+
 export default ProductRouter;
