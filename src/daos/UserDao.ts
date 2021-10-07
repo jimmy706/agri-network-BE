@@ -9,6 +9,8 @@ import { auth } from 'firebase-admin';
 import { FirebaseMessageTypes, FirebsaeMessage } from '@entities/FirebaseMessage';
 import FirebaseDao from './FirebaseDao';
 import { Location } from '@entities/Location';
+import PaginationResponse from '@entities/PaginationResponse';
+import mongoose from 'mongoose';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 12;
 const firebaseDao = new FirebaseDao();
@@ -210,12 +212,46 @@ class UserDao {
         }
     }
 
-    public async getFriends(userId: string): Promise<User[]> {
-        const friendObj: any = await FriendModel.findOne({ owner: userId })
-            .populate({ path: 'friends', select: 'firstName lastName avatar type' })
+    public async getFriends(userId: string, page: number = 1, limit: number = DEFAULT_LIMIT_USERS_RENDER): Promise<PaginationResponse<User>> {
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+        const friendObj: any = await FriendModel.findOne({ owner: userId }, { _id: 0, friends: { $slice: [startIndex, endIndex] } })
             .orFail(new Error(ErrorMessages.NOT_FOUND));
+        const queryCount = await FriendModel.aggregate([
+            {
+                $match: {
+                    owner: userId
+                }
+            },
+            {
+                $project: {
+                    count: {
+                        $size: '$friends'
+                    }
+                }
+            }
+        ]);
+        let count: number = queryCount[0]?.count;
+        const hasNextPage = friendObj.friends.length < count;
+        const hasPrevPage = page > 1;
+        
+        const friends = await UserModel.find({
+            _id: {
+                $in: friendObj.friends
+            }
+        }).select("firstName lastName avatar type");
 
-        return friendObj.friends as User[];
+        const result: PaginationResponse<User> = {
+            totalDocs: count,
+            page,
+            limit,
+            docs: friends,
+            hasNextPage,
+            hasPrevPage,
+            nextPage: hasNextPage ? (page + 1) : page,
+            prevPage: hasPrevPage ? (page - 1) : page,
+        }
+        return result;
     }
 
     public async follow(sourceUserId: string, targetUserId: string): Promise<void> {

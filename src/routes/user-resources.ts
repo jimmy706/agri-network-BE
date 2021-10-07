@@ -226,8 +226,15 @@ export async function unfriend(req: Request, res: Response): Promise<Response> {
 }
 
 export async function getFriends(req: Request, res: Response): Promise<Response> {
+    let page = 1;
+    let limit = DEFAULT_LIMIT_USERS_RENDER;
+    if (req.query.page && req.query.limit) {
+        page = typeof req.query.page == 'string' ? Number.parseInt(req.query.page) : 1;
+        limit = typeof req.query.limit === 'string' ? Number.parseInt(req.query.limit) : DEFAULT_LIMIT_USERS_RENDER;
+    }
+
     const { id } = req.params;
-    const friends = await userDao.getFriends(id);
+    const friends = await userDao.getFriends(id, page, limit);
 
     return res.status(OK).json(friends);
 }
