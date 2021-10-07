@@ -6,7 +6,7 @@ import provinceRouter from './province-router';
 import recommendRouter from './recommend-router';
 import userRouter from './user-router';
 import tagRouter from './tag-router';
-import productRouter from './product-router';
+import categoryRouter from './category-router';
 
 
 
@@ -24,5 +24,5 @@ baseRouter.use('/medias', mediaRouter);
 baseRouter.use('/posts', postRouter);
 baseRouter.use('/recommend', recommendRouter);
 baseRouter.use('/tag', tagRouter);
-baseRouter.use('/product', productRouter);
+baseRouter.use('/category', categoryRouter);
 export default baseRouter;
