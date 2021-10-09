@@ -39,13 +39,13 @@ class RecommendDao {
             const uid = record.get('foaf.uid');
             uids.add(uid);
         }
-
-        const uidsToObjectIds: any = Array.from(uids).map(uid => mongoose.Types.ObjectId(uid));
-        const users = await UserModel.find({
-            _id: {
-                $in: uidsToObjectIds
+        const users = [];
+        for(let uid of uids) {
+            const user = await UserModel.findById(uid).select("firstName lastName _id email type avatar location");
+            if(user) {
+                users.push(user);
             }
-        }).select("firstName lastName _id email type avatar location");
+        }
 
         const friendRequestExits = await Promise.all(users.map(u => {
             const friendRequest = FriendRequestModel.findOne({ from: userId, to: u._id });
@@ -56,9 +56,12 @@ class RecommendDao {
         const result: RecommendUser[] = [];
         for (let i = 0; i < users.length; i++) {
             const pendingFriendRequest = friendRequestExits[i] == null || undefined ? false : true;
-            result.push({ ...users[i].toObject(), pendingFriendRequest, isFriend: false });
+            result.push({ ...users[i].toObject(), pendingFriendRequest, isFriend: false, distance: -1 });
         }
-        return this.sortRecommendUser(result, currentUser).slice(0, DEFAULT_LIMIT_USERS_RENDER);
+        if(currentUser.location) {
+            return this.sortRecommendUser(result, currentUser).slice(0, DEFAULT_LIMIT_USERS_RENDER);
+        }
+        return result;
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
