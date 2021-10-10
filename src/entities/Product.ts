@@ -20,6 +20,7 @@ export interface Product extends Document {
     owner: string;
     createdDate: Date;
     views: number;
+    thumbnails: string[]
 }
 
 export const ProductSchema = new Schema<Product>({
@@ -69,6 +70,11 @@ export const ProductSchema = new Schema<Product>({
         require: false,
         default: 0
     },
+    thumbnails: {
+        type: [String],
+        require: false,
+        default: []
+    }
 });
 ProductSchema.plugin(mongoosePaginate);
 

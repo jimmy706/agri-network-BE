@@ -1,3 +1,4 @@
+import ErrorMessages from "@constant/errors";
 import ProductModel, { Product } from "@entities/Product";
 import { FilterQuery, PaginateOptions, PaginateResult } from "mongoose";
 
@@ -44,8 +45,14 @@ class ProductDao {
     public async add(product: Product): Promise<Product> {
         const newProduct = new ProductModel(product);
         newProduct.createdDate = new Date();
-
+        newProduct.views = 0;
         const result = await newProduct.save();
+        return result;
+    }
+
+    public async getById(id: string): Promise<Product> {
+        const result = await ProductModel.findById(id).orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
+
         return result;
     }
 
@@ -55,7 +62,7 @@ class ProductDao {
         const paginationOptions: PaginateOptions = {
             page,
             limit,
-            select: 'name price owner views',
+            select: 'name price owner views thumbnails',
             sort: { createdDate: -1, name: -1 },
         };
         console.log(criteria);

@@ -30,6 +30,19 @@ export async function add(req: Request, res: Response): Promise<Response> {
     }
 }
 
+export async function getById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+
+    try {
+        const result = await productDao.getById(id);
+        return res.status(OK).json(result);
+    }
+    catch(error) {
+        logger.err(error);
+        return res.status(NOT_FOUND).json(error);
+    }
+}
+
 export async function search(req: Request, res: Response): Promise<Response> {
     let limitQuery = DEFAULT_LIMIT_PRODUCTS_RENDER;
     let pageQuery = 1;
