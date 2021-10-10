@@ -14,7 +14,7 @@ export interface Post extends Document{
     createdDate: Date;
     lastModified: Date;
     format: PostFormat;
-    ref: any;
+    ref: Map<string, string>;
     images: string[];
     tags: string[];
 }

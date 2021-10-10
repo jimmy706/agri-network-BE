@@ -19,8 +19,9 @@ export const ProductSchema = new Schema<Product>({
         default: 1000
     },
     productCategory: {
-        type: String,
-        require: true
+        type: Schema.Types.ObjectId,
+        require: true,
+        ref: 'ProductCategory'
     },
     quantity: {
         type: Number,
