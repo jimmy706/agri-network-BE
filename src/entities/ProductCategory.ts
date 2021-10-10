@@ -1,7 +1,8 @@
 import { Schema, model } from 'mongoose';
 
 export interface ProductCategory {
-    name: string;    
+    name: string;
+    views: number; 
 }
 
 export const ProductCategorySchema = new Schema<ProductCategory>({
@@ -9,6 +10,11 @@ export const ProductCategorySchema = new Schema<ProductCategory>({
         type: String,
         require: true,
         unique: true
+    },
+    views: {
+        type: Number,
+        require: true,
+        default: 0,
     }
 });
 

@@ -9,6 +9,7 @@ export interface Product {
     quantity: number;
     owner: string;
     createdDate: Date;
+    views: number;
 }
 
 export const ProductSchema = new Schema<Product>({
@@ -38,19 +39,14 @@ export const ProductSchema = new Schema<Product>({
         type: Date,
         require: true,
         default: new Date()
+    },
+    views: {
+        tpye: Number.MAX_VALUE,
+        require: false,
+        default: 0
     }
 });
 
 const ProductModel = model<Product>('Product', ProductSchema);
 
 export default ProductModel;
-
-ProductSchema.pre<Product>('save', async function(this: Product, next) {
-    const product = await ProductModel.findById(this._id);
-    if(product) {
-        product.createdDate = new Date();
-    }
-    else {
-        next(new Error(ErrorMessages.PRODUCT_NOT_FOUND))
-    }
-})
