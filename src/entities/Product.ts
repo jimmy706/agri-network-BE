@@ -1,12 +1,22 @@
-import ErrorMessages from '@constant/errors';
-import { Schema, model } from 'mongoose';
+import { Document, model, PaginateModel, Schema } from 'mongoose';
+const mongoosePaginate = require('mongoose-paginate-v2');
 
-export interface Product {
+export enum QuantityType {
+    POUND = 'Tấn',
+    WEIGHT = 'Tạ',
+    STONE = 'Yến',
+    KG = 'Kg',
+    GRAM = 'Gram',
+    REGULAR = 'Cái',
+};
+
+export interface Product extends Document {
     _id: string;
     name: string;
     price: number;
-    productCategory: string;
+    categories: string;
     quantity: number;
+    quantityType: QuantityType;
     owner: string;
     createdDate: Date;
     views: number;
@@ -31,9 +41,23 @@ export const ProductSchema = new Schema<Product>({
         type: Number,
         default: 1
     },
+    quantityType: {
+        type: String,
+        require: true,
+        default: QuantityType.REGULAR,
+        enum: [
+            QuantityType.POUND,
+            QuantityType.WEIGHT,
+            QuantityType.STONE,
+            QuantityType.KG,
+            QuantityType.GRAM,
+            QuantityType.REGULAR
+        ]
+    },
     owner: {
         type: Schema.Types.ObjectId,
-        ref: 'User'
+        ref: 'User',
+        require: true
     },
     createdDate: {
         type: Date,
@@ -41,12 +65,15 @@ export const ProductSchema = new Schema<Product>({
         default: new Date()
     },
     views: {
-        tpye: Number.MAX_VALUE,
+        tpye: Number,
         require: false,
         default: 0
-    }
+    },
 });
+ProductSchema.plugin(mongoosePaginate);
 
-const ProductModel = model<Product>('Product', ProductSchema);
+interface ProductModelInf<T extends Document> extends PaginateModel<T> {};
+
+const ProductModel = model<Product>('Product', ProductSchema) as ProductModelInf<Product>;
 
 export default ProductModel;

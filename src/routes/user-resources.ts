@@ -89,6 +89,7 @@ export async function auth(req: Request, res: Response, next: NextFunction): Pro
         }
     }
     catch (error) {
+        logger.err(error);
         res.status(UNAUTHORIZED).json(error);
     }
 }
