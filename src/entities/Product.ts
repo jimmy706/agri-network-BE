@@ -1,11 +1,14 @@
+import ErrorMessages from '@constant/errors';
 import { Schema, model } from 'mongoose';
 
 export interface Product {
+    _id: string;
     name: string;
     price: number;
     productCategory: string;
     quantity: number;
     owner: string;
+    createdDate: Date;
 }
 
 export const ProductSchema = new Schema<Product>({
@@ -18,11 +21,11 @@ export const ProductSchema = new Schema<Product>({
         require: true,
         default: 1000
     },
-    productCategory: {
+    categories: [{
         type: Schema.Types.ObjectId,
         require: true,
         ref: 'ProductCategory'
-    },
+    }],
     quantity: {
         type: Number,
         default: 1
@@ -30,5 +33,24 @@ export const ProductSchema = new Schema<Product>({
     owner: {
         type: Schema.Types.ObjectId,
         ref: 'User'
+    },
+    createdDate: {
+        type: Date,
+        require: true,
+        default: new Date()
     }
 });
+
+const ProductModel = model<Product>('Product', ProductSchema);
+
+export default ProductModel;
+
+ProductSchema.pre<Product>('save', async function(this: Product, next) {
+    const product = await ProductModel.findById(this._id);
+    if(product) {
+        product.createdDate = new Date();
+    }
+    else {
+        next(new Error(ErrorMessages.PRODUCT_NOT_FOUND))
+    }
+})

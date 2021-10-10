@@ -5,7 +5,8 @@ const ErrorMessages = {
     USER_NOT_FOUND: "Không tìm thấy người dùng này",
     ALREADY_FOLLOWED: "Bạn đã theo dõi người này",
     PERMISSTION_DENIED: "Bạn không có quyền thực hiện hành động này",
-    FRIEND_REQUEST_EXISTED: "Lời mời kết bạn đã tồn tại"
+    FRIEND_REQUEST_EXISTED: "Lời mời kết bạn đã tồn tại",
+    PRODUCT_NOT_FOUND: "Sản phẩm không tồn tại"
 }
 
 export default ErrorMessages;
