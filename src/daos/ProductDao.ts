@@ -65,7 +65,6 @@ class ProductDao {
             select: 'name price owner views thumbnails',
             sort: { createdDate: -1, name: -1 },
         };
-        console.log(criteria);
 
         const products: PaginateResult<Product> = await new Promise((resolve, reject) => {
             ProductModel.paginate(searchQuery, paginationOptions, (error, result) => {

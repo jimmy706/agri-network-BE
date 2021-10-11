@@ -3,7 +3,6 @@ import ErrorMessages from "@constant/errors";
 import FriendRequestModel from "@entities/FriendRequest";
 import UserModel, { RecommendUser, User } from "@entities/User";
 import LocationHandler from "@utils/LocationHandler";
-import mongoose from 'mongoose';
 import { Result } from "neo4j-driver-core";
 import { DEFAULT_LIMIT_USERS_RENDER } from "./UserDao";
 
@@ -61,8 +60,22 @@ class RecommendDao {
         if(currentUser.location) {
             return this.sortRecommendUser(result, currentUser).slice(0, DEFAULT_LIMIT_USERS_RENDER);
         }
+
         return result;
     }
+
+    public async getRecommendedProductsNearLocation(userId: string): Promise<void> {
+        const currentUser = await UserModel.findById(userId).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
+        const { province, district, ward, location } = currentUser;
+        if (location) {
+            // TODO: Get products from location
+        }
+        else {
+            // TODO: Get products from same ward, district, province
+
+        }
+    }
+
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
         return arr.sort((u1, u2) => {

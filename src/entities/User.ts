@@ -23,6 +23,10 @@ export interface User {
     location: Location
 }
 
+export interface UserWithDistance extends User {
+    distance?: number
+}
+
 export interface RecommendUser extends User {
     pendingFriendRequest: boolean;
     distance?: number;

@@ -1,4 +1,4 @@
-import UserDao, { DEFAULT_LIMIT_USERS_RENDER } from '@daos/UserDao';
+import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from '@daos/UserDao';
 import { User } from '@entities/User';
 import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
@@ -364,3 +364,37 @@ export async function searchByUser(req: Request, res: Response) {
     }
 }
 
+export async function search(req: Request, res: Response): Promise<Response> {
+    if (req.params.authUser) {
+        const authUser = JSON.parse(req.params.authUser) as User;
+        try {
+            let limitQuery = DEFAULT_LIMIT_USERS_RENDER;
+            let pageQuery = 1;
+            const query: SearchUserCriteria = new SearchUserCriteria(limitQuery, pageQuery);
+            const { limit, page, radius, name } = req.query;
+            if (limit) {
+                query.limit = Number(limit as string);
+            }
+            if (page) {
+                query.page = Number(page as string);
+            }
+            if (radius && Number(radius) > 0) {
+                query.radius = Number(radius);
+            }
+            if(name) {
+                query.name = name as string;
+            }
+
+            const result = await userDao.search(authUser._id, query);
+
+            return res.status(OK).json(result);
+        }
+        catch (error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json();
+    }
+}

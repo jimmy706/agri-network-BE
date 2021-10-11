@@ -22,18 +22,21 @@ export default class LocationHandler {
      * @returns the distance between 2 lat,lng point in km
      */
     public getDistance(from: Location, to: Location): number {
-        let distance = 0;
-        let radius = 6371; // Radius of the earth in km
-        let dLat = this.deg2rad(to.lat - from.lat);
-        let dLon = this.deg2rad(to.lng - from.lng);
-        let a =
-            Math.pow(Math.sin(dLat / 2), 2) +
-            Math.cos(this.deg2rad(from.lat)) * Math.cos(this.deg2rad(to.lat)) *
-            Math.pow(Math.sin(dLon / 2), 2);
-
-        let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-        distance = radius * c; // Distance in km
-        return distance;
+        if(this.isLocationValid(from) && this.isLocationValid(to)) {
+            let distance = 0;
+            let radius = 6371; // Radius of the earth in km
+            let dLat = this.deg2rad(to.lat - from.lat);
+            let dLon = this.deg2rad(to.lng - from.lng);
+            let a =
+                Math.pow(Math.sin(dLat / 2), 2) +
+                Math.cos(this.deg2rad(from.lat)) * Math.cos(this.deg2rad(to.lat)) *
+                Math.pow(Math.sin(dLon / 2), 2);
+    
+            let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+            distance = radius * c; // Distance in km
+            return distance;
+        }
+        return Number.MAX_VALUE;
     }
 
     public isLocationValid(location: Location): boolean {

@@ -3,14 +3,15 @@ import ErrorMessages from '@constant/errors';
 import FollowModel, { Follow } from '@entities/Follow';
 import FriendModel from '@entities/Friend';
 import FriendRequestModel, { FriendRequest } from '@entities/FriendRequest';
-import UserModel, { User } from '@entities/User';
+import UserModel, { User, UserWithDistance } from '@entities/User';
 import UserDetail from '@entities/UserDetail';
 import { auth } from 'firebase-admin';
 import { FirebaseMessageTypes, FirebsaeMessage } from '@entities/FirebaseMessage';
 import FirebaseDao from './FirebaseDao';
 import { Location } from '@entities/Location';
 import PaginationResponse from '@entities/PaginationResponse';
-import mongoose from 'mongoose';
+import LocationHandler from '@utils/LocationHandler';
+import { FilterQuery } from 'mongoose';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 12;
 const firebaseDao = new FirebaseDao();
@@ -18,6 +19,37 @@ const firebaseDao = new FirebaseDao();
 export interface CountFollowingsAndFollowers {
     followingsCount: number,
     followersCount: number
+}
+
+export class SearchUserCriteria {
+    name?: string;
+    radius?: number;
+    limit: number;
+    page: number;
+
+    constructor(limit: number, page: number) {
+        this.limit = limit;
+        this.page = page;
+    }
+
+    public toQuery(currentUser: User): FilterQuery<User> {
+        let result: any = {};
+        if (this.name) {
+            result = {
+                $or: [
+                    { "firstName": { '$regex': this.name, $options: "i" } },
+                    { "lastName": { '$regex': this.name, $options: "i" } }
+                ]
+            }
+        }
+        if (this.radius) {
+            result = {
+                $and: [{ ...result }]
+            }
+        }
+
+        return result;
+    }
 }
 
 class UserDao {
@@ -234,7 +266,7 @@ class UserDao {
         let count: number = queryCount[0]?.count;
         const hasNextPage = friendObj.friends.length < count;
         const hasPrevPage = page > 1;
-        
+
         const friends = await UserModel.find({
             _id: {
                 $in: friendObj.friends
@@ -430,6 +462,73 @@ class UserDao {
             ]
         }).limit(DEFAULT_LIMIT_USERS_RENDER)
         return userResult;
+    }
+
+    public async search(userId: string, criteria: SearchUserCriteria): Promise<PaginationResponse<UserWithDistance>> {
+        const { page, limit, radius } = criteria;
+        const user = await this.getById(userId);
+        const query = criteria.toQuery(user);
+        const startIndex = (page - 1) * limit;
+        const users = await UserModel.find(query).skip(startIndex).limit(limit).sort({ firstName: 1, lastName: 1 });
+        const totalDocs = await UserModel.countDocuments(query);
+        const locationHandler = LocationHandler.getInstance();
+
+        const hasNextPage = (page * limit) < totalDocs;
+        const hasPrevPage = page > 1;
+
+        const result: PaginationResponse<User> = {
+            docs: users,
+            limit,
+            page,
+            totalDocs,
+            hasNextPage,
+            hasPrevPage,
+            nextPage: hasNextPage ? page + 1 : page,
+            prevPage: hasPrevPage ? page - 1 : page,
+        }
+        if(radius && locationHandler.isLocationValid(user.location)) {
+            return this.getUsersWithinRadius(user, users, criteria);
+        }
+
+        return result;
+    }
+
+    private getUsersWithinRadius(user: User, users: any, criteria: SearchUserCriteria): PaginationResponse<UserWithDistance> {
+        const { location } = user;
+        const { page, limit, radius = 1 } = criteria;
+        const locationHandler = LocationHandler.getInstance();
+        const startIndex = (page - 1) * limit;
+        const endIndex = page * limit;
+
+        const docs: UserWithDistance[] = users
+        .map((u: any) => {
+            const distance = locationHandler.getDistance(location, u.location);
+            return { ...u.toObject(), distance }
+        })
+        .filter((u: UserWithDistance) => {
+            const distance = u.distance || -1;
+            return (distance <= radius) && String(u._id) !== String(user._id);
+        }).sort((u1: UserWithDistance, u2: UserWithDistance) => {
+            const d1 = u1.distance as number;
+            const d2 = u2.distance as number;
+            return d1 - d2;
+        });
+        const docsAfterSliced = docs.slice(startIndex, endIndex);
+        const hasNextPage = docsAfterSliced.length < docs.length;
+        const hasPrevPage = page > 1;
+        
+        const result: PaginationResponse<UserWithDistance> = {
+            docs: docsAfterSliced,
+            page,
+            limit, 
+            totalDocs: docs.length,
+            hasNextPage,
+            hasPrevPage,
+            nextPage: hasNextPage ? page + 1 : page,
+            prevPage: hasPrevPage ? page - 1 : page
+        }
+
+        return result;
     }
 }
 
