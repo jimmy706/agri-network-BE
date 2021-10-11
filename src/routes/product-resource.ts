@@ -73,6 +73,7 @@ export async function search(req: Request, res: Response): Promise<Response> {
     }
     catch(error) {
         logger.err(error);
+        console.log(error)
         return res.status(BAD_REQUEST).json(error);
     }
 }

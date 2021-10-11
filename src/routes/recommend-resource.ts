@@ -14,8 +14,27 @@ export async function getRecommendedUsers(req: Request, res: Response): Promise<
     if(authUser) {
         try {
             const result = await recommendDao.getRecommendedUsers(authUser._id);
-
             return res.status(OK).json(result);
+        }
+        catch(error) {
+            logger.err(error);
+            return res.status(BAD_REQUEST).json(error);
+        }
+    }
+    else {
+        return res.status(UNAUTHORIZED).json(); 
+    }
+}
+
+export async function getRecommendedNearbyProducts(req: Request, res: Response) {
+    const authUser = JSON.parse(req.params.authUser) as User;
+    if(authUser) {
+        const { radius } = req.query;        
+        try {
+            if(radius) {
+                const result = await recommendDao.getRecommendedProductsNearLocation(authUser._id, Number(radius as string));
+                return res.status(OK).json(result);
+            }
         }
         catch(error) {
             logger.err(error);

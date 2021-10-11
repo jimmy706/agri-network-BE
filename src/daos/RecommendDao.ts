@@ -4,10 +4,14 @@ import FriendRequestModel from "@entities/FriendRequest";
 import UserModel, { RecommendUser, User } from "@entities/User";
 import LocationHandler from "@utils/LocationHandler";
 import { Result } from "neo4j-driver-core";
-import { DEFAULT_LIMIT_USERS_RENDER } from "./UserDao";
+import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
+import mongoose from 'mongoose';
+import ProductDao, { SearchProductCriteria, SortProduct } from "./ProductDao";
 
 class RecommendDao {
-    private priority = ['ward', 'district', 'province']
+    private priority = ['ward', 'district', 'province'];
+    private userDao: UserDao = new UserDao();
+    private productDao: ProductDao = new ProductDao();
 
     public async getRecommendedUsers(userId: string): Promise<RecommendUser[]> {
 
@@ -64,16 +68,29 @@ class RecommendDao {
         return result;
     }
 
-    public async getRecommendedProductsNearLocation(userId: string): Promise<void> {
-        const currentUser = await UserModel.findById(userId).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
-        const { province, district, ward, location } = currentUser;
-        if (location) {
-            // TODO: Get products from location
-        }
-        else {
-            // TODO: Get products from same ward, district, province
+    public async getRecommendedProductsNearLocation(userId: string, radius: number): Promise<any> {
+        const queryCriteria = new SearchUserCriteria(DEFAULT_LIMIT_USERS_RENDER, 1);
+        queryCriteria.radius = radius;
+        const queryUserNearbyResult = await this.userDao.search(userId, queryCriteria);
+        let result = [];
 
+        if(queryUserNearbyResult.docs.length > 0) {
+            const usersNearby = queryUserNearbyResult.docs;
+            const uids = usersNearby.map(u => u._id);
+            const queryProducts = await Promise.all(uids.map(uid => {
+                const searchProdCriteria = new SearchProductCriteria(1, 1);
+                searchProdCriteria.sort = SortProduct.VIEWS;
+                searchProdCriteria.owner = uid;
+                return this.productDao.search(searchProdCriteria);
+            }));
+
+            for (let queryResult of queryProducts) {
+                if(queryResult.totalDocs > 0) {
+                    result.push(queryResult.docs[0]);
+                }
+            }
         }
+        return result;
     }
 
 
