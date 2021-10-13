@@ -6,7 +6,8 @@ import LocationHandler from "@utils/LocationHandler";
 import { Result } from "neo4j-driver-core";
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
 import mongoose from 'mongoose';
-import ProductDao, { SearchProductCriteria, SortProduct } from "./ProductDao";
+import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
+import { Product } from "@entities/Product";
 
 class RecommendDao {
     private priority = ['ward', 'district', 'province'];
@@ -68,7 +69,7 @@ class RecommendDao {
         return result;
     }
 
-    public async getRecommendedProductsNearLocation(userId: string, radius: number): Promise<any> {
+    public async getRecommendedProductsNearLocation(userId: string, radius: number): Promise<Product[]> {
         const queryCriteria = new SearchUserCriteria(DEFAULT_LIMIT_USERS_RENDER, 1);
         queryCriteria.radius = radius;
         const queryUserNearbyResult = await this.userDao.search(userId, queryCriteria);
@@ -93,6 +94,18 @@ class RecommendDao {
         return result;
     }
 
+    public async getRecommendedProductsFromFriends(userId: string): Promise<any> {
+        const queryString = `MATCH (u:User{uid: $uid})<-[:FRIENDED]-(friends)-[:PROVIDED]->(p:Product) 
+        RETURN p.id, friends.uid LIMIT ${DEFAULT_LIMIT_PRODUCTS_RENDER} ORDERED BY p.createdDate`;
+        const queryParams = {
+            uid: userId
+        }
+        const result = await runNeo4jQuery(queryString, queryParams);
+        let productRecords:Map<string, string> = new Map();
+        for (let record of result.records) {
+            // TODO: get newest products
+        }
+    }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
         return arr.sort((u1, u2) => {

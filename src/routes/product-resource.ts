@@ -1,6 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response } from 'express';
-import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria } from '@daos/ProductDao';
+import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from '@daos/ProductDao';
 import logger from '@shared/Logger';
 import { User } from '@entities/User';
 import { Product } from '@entities/Product';
@@ -8,6 +8,19 @@ import { Product } from '@entities/Product';
 const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, } = StatusCodes;
 
 const productDao = new ProductDao();
+
+function toSortProduct(n: number) {
+    switch(n) {
+        case 1:
+            return SortProduct.NAME;
+        case 2:
+            return SortProduct.VIEWS;
+        case 3:
+            return SortProduct.CREATED_DATE;
+        default:
+            return SortProduct.NAME;            
+    }
+}
 
 export async function add(req: Request, res: Response): Promise<Response> {
     if (req.params.authUser) {
@@ -49,7 +62,7 @@ export async function search(req: Request, res: Response): Promise<Response> {
     const query: SearchProductCriteria = new SearchProductCriteria(limitQuery, pageQuery);
 
     try {
-        const { limit, page, name, owner, priceFrom, priceTo } = req.query;
+        const { limit, page, name, owner, priceFrom, priceTo, categories, sort = "1" } = req.query;
         if(limit) {
             query.limit = parseInt(limit as string);
         }
@@ -66,6 +79,10 @@ export async function search(req: Request, res: Response): Promise<Response> {
             query.priceFrom = parseFloat(priceFrom as string);
             query.priceTo = parseFloat(priceTo as string);
         }
+        if(categories) {
+            query.categories = String(categories).split(",").map(cate => cate.trim());
+        }
+        query.sort = toSortProduct(parseInt(sort as string));
 
         const result = await productDao.search(query);
 

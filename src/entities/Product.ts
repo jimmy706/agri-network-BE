@@ -14,13 +14,22 @@ export interface Product extends Document {
     _id: string;
     name: string;
     price: number;
-    categories: string;
+    categories: string[];
     quantity: number;
     quantityType: QuantityType;
     owner: string;
     createdDate: Date;
     views: number;
     thumbnails: string[]
+}
+
+export interface ProductDetail extends Product {
+    fromOwnerProducts: Product[];
+    relatedProducts: Product[];
+}
+
+function limitCategories(val: string[]) {
+    return val.length <= 3;
 }
 
 export const ProductSchema = new Schema<Product>({
@@ -33,11 +42,14 @@ export const ProductSchema = new Schema<Product>({
         require: true,
         default: 1000
     },
-    categories: [{
-        type: Schema.Types.ObjectId,
-        require: true,
-        ref: 'ProductCategory'
-    }],
+    categories: {
+        type: [{
+            type: Schema.Types.ObjectId,
+            require: true,
+            ref: 'ProductCategory',        
+        }],
+        validate: [limitCategories, 'Maximum number of categories']
+    },
     quantity: {
         type: Number,
         default: 1
