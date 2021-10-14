@@ -7,7 +7,7 @@ import { Result } from "neo4j-driver-core";
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
 import mongoose from 'mongoose';
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
-import { Product } from "@entities/Product";
+import ProductModel, { Product } from "@entities/Product";
 
 class RecommendDao {
     private priority = ['ward', 'district', 'province'];
@@ -94,17 +94,34 @@ class RecommendDao {
         return result;
     }
 
-    public async getRecommendedProductsFromFriends(userId: string): Promise<any> {
+    public async getRecommendedProductsFromFriends(userId: string): Promise<Product[]> {
         const queryString = `MATCH (u:User{uid: $uid})<-[:FRIENDED]-(friends)-[:PROVIDED]->(p:Product) 
-        RETURN p.id, friends.uid LIMIT ${DEFAULT_LIMIT_PRODUCTS_RENDER} ORDERED BY p.createdDate`;
+        RETURN p.id, friends.uid ORDER BY p.createdDate LIMIT ${DEFAULT_LIMIT_PRODUCTS_RENDER}`;
         const queryParams = {
             uid: userId
         }
         const result = await runNeo4jQuery(queryString, queryParams);
         let productRecords:Map<string, string> = new Map();
         for (let record of result.records) {
-            // TODO: get newest products
+            const uid = record.get('friends.uid');
+            const pid = record.get('p.id');
+            if(!productRecords.has(uid)) {
+                productRecords.set(uid, pid);
+            }
         }
+
+        let productIds: any = [];
+        for(let entry of productRecords.entries()) {
+            productIds.push(mongoose.Types.ObjectId(entry[1]));
+        }
+
+        const products = await ProductModel.find({
+            _id: {
+                $in: productIds
+            }
+        });
+        
+        return products;
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {

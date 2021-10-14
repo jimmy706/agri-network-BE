@@ -23,5 +23,4 @@ userRouter.post('/:id/friend-request/reject', userResource.auth, userResource.re
 userRouter.get('/:id/friends', userResource.auth, userResource.getFriends);
 userRouter.post('/getToken', userResource.getTokenFromUid);
 userRouter.get('/search/userName', userResource.searchByUser);
-
 export default userRouter;

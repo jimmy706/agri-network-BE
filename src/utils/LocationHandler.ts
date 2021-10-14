@@ -29,7 +29,8 @@ export default class LocationHandler {
             let dLon = this.deg2rad(to.lng - from.lng);
             let a =
                 Math.pow(Math.sin(dLat / 2), 2) +
-                Math.cos(this.deg2rad(from.lat)) * Math.cos(this.deg2rad(to.lat)) *
+                Math.cos(this.deg2rad(from.lat)) * 
+                Math.cos(this.deg2rad(to.lat)) *
                 Math.pow(Math.sin(dLon / 2), 2);
     
             let c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));

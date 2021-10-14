@@ -54,7 +54,10 @@ export const UserSchema = new Schema<User>({
             UserType.SUPPLIER
         ], require: true, default: UserType.PRODUCER
     },
-    location: LocationSchema
+    location: {
+        type: LocationSchema,
+        default: new Location(-360, -360)
+    }
 });
 
 const UserModel = model<User>('User', UserSchema);

@@ -12,6 +12,7 @@ import { Location } from '@entities/Location';
 import PaginationResponse from '@entities/PaginationResponse';
 import LocationHandler from '@utils/LocationHandler';
 import { FilterQuery } from 'mongoose';
+import PaginationHandler from '@utils/PaginationHandler';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 12;
 const firebaseDao = new FirebaseDao();
@@ -32,7 +33,7 @@ export class SearchUserCriteria {
         this.page = page;
     }
 
-    public toQuery(currentUser: User): FilterQuery<User> {
+    public toQuery(): FilterQuery<User> {
         let result: any = {};
         if (this.name) {
             result = {
@@ -40,11 +41,6 @@ export class SearchUserCriteria {
                     { "firstName": { '$regex': this.name, $options: "i" } },
                     { "lastName": { '$regex': this.name, $options: "i" } }
                 ]
-            }
-        }
-        if (this.radius) {
-            result = {
-                $and: [{ ...result }]
             }
         }
 
@@ -464,72 +460,154 @@ class UserDao {
         return userResult;
     }
 
-    public async search(userId: string, criteria: SearchUserCriteria): Promise<PaginationResponse<UserWithDistance>> {
+    public async search(userId: string, criteria: SearchUserCriteria): Promise<PaginationResponse<any>> {
+
         const { page, limit, radius } = criteria;
         const user = await this.getById(userId);
-        const query = criteria.toQuery(user);
-        const startIndex = (page - 1) * limit;
+        const query = criteria.toQuery();
+        const locationHandler = LocationHandler.getInstance();
+
+        if (radius && locationHandler.isLocationValid(user.location)) {
+            return this.searchUserWithinRadius(user.location, criteria)
+        }
+
+        const startIndex = PaginationHandler.getStartIndex(page, limit);
         const users = await UserModel.find(query).skip(startIndex).limit(limit).sort({ firstName: 1, lastName: 1 });
         const totalDocs = await UserModel.countDocuments(query);
-        const locationHandler = LocationHandler.getInstance();
 
-        const hasNextPage = (page * limit) < totalDocs;
-        const hasPrevPage = page > 1;
-
-        const result: PaginationResponse<User> = {
-            docs: users,
-            limit,
-            page,
-            totalDocs,
-            hasNextPage,
-            hasPrevPage,
-            nextPage: hasNextPage ? page + 1 : page,
-            prevPage: hasPrevPage ? page - 1 : page,
-        }
-        if(radius && locationHandler.isLocationValid(user.location)) {
-            return this.getUsersWithinRadius(user, users, criteria);
-        }
-
-        return result;
+        return new PaginationHandler(limit, page, users, totalDocs).toPaginationResponse();
     }
 
-    private getUsersWithinRadius(user: User, users: any, criteria: SearchUserCriteria): PaginationResponse<UserWithDistance> {
-        const { location } = user;
-        const { page, limit, radius = 1 } = criteria;
-        const locationHandler = LocationHandler.getInstance();
-        const startIndex = (page - 1) * limit;
-        const endIndex = page * limit;
-
-        const docs: UserWithDistance[] = users
-        .map((u: any) => {
-            const distance = locationHandler.getDistance(location, u.location);
-            return { ...u.toObject(), distance }
-        })
-        .filter((u: UserWithDistance) => {
-            const distance = u.distance || -1;
-            return (distance <= radius) && String(u._id) !== String(user._id);
-        }).sort((u1: UserWithDistance, u2: UserWithDistance) => {
-            const d1 = u1.distance as number;
-            const d2 = u2.distance as number;
-            return d1 - d2;
-        });
-        const docsAfterSliced = docs.slice(startIndex, endIndex);
-        const hasNextPage = docsAfterSliced.length < docs.length;
-        const hasPrevPage = page > 1;
-        
-        const result: PaginationResponse<UserWithDistance> = {
-            docs: docsAfterSliced,
-            page,
-            limit, 
-            totalDocs: docs.length,
-            hasNextPage,
-            hasPrevPage,
-            nextPage: hasNextPage ? page + 1 : page,
-            prevPage: hasPrevPage ? page - 1 : page
+    private async searchUserWithinRadius(location: Location, searchUserCriteria: SearchUserCriteria) {
+        const { page, limit, radius } = searchUserCriteria;
+        const earthRadius = 6371; // Radius of the earth in km
+        const degRad = Math.PI / 180;
+        const startIndex = PaginationHandler.getStartIndex(page, limit);
+        const endIndex = PaginationHandler.getEndIndex(page, limit);
+        const filterObject = {
+            $match: {
+                $and: [
+                    {
+                        distance: {
+                            $lte: radius
+                        }
+                    },
+                    searchUserCriteria.toQuery()
+                ]
+            }
         }
 
-        return result;
+        const { lat, lng } = location;
+        const ultimateQueriedWithinRadiusUsers: any[] = await UserModel.aggregate([
+            {
+                $addFields: {
+                    dLat: {
+                        $multiply: [
+                            degRad,
+                            { $subtract: ["$location.lat", lat] }
+                        ]
+                    },
+                    dLng: {
+                        $multiply: [
+                            degRad,
+                            { $subtract: ["$location.lng", lng] }
+                        ]
+                    },
+                }
+            },
+            {
+                $addFields: {
+                    dRadLat: {
+                        $pow: [{
+                            $sin: {
+                                $divide: ["$dLat", 2]
+                            }
+                        }, 2]
+                    },
+                    dRadCenter: {
+                        $multiply: [
+                            {
+                                $cos: {
+                                    $multiply: [
+                                        degRad, lat
+                                    ]
+                                }
+                            },
+                            {
+                                $cos: {
+                                    $multiply: [
+                                        degRad, "$location.lat"
+                                    ]
+                                }
+                            }
+                        ]
+                    },
+                    dRadLng: {
+                        $pow: [{
+                            $sin: {
+                                $divide: ["$dLng", 2]
+                            }
+                        }, 2]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    area: {
+                        $sum: [
+                            "$dRadLat", {
+                                $multiply: ["$dRadCenter", "$dRadLng"]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    c: {
+                        $multiply: [
+                            2, {
+                                $atan2: [
+                                    { $sqrt: "$area" },
+                                    {
+                                        $sqrt: {
+                                            $subtract: [1, "$area"]
+                                        }
+                                    }
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    distance: {
+                        $multiply: [
+                            earthRadius,
+                            "$c"
+                        ]
+                    }
+                }
+            },
+            filterObject,
+            {
+                $project: {
+                    firstName: 1, lastName: 1, distance: 1, _id: 1, avatar: 1, type: 1
+                },
+            },
+            {
+                $sort: {
+                    distance: 1, firstName: 1, lastName: 1
+                }
+            }
+        ]);
+        const totalDocs: number = ultimateQueriedWithinRadiusUsers.length;
+        const docs: Object[] = ultimateQueriedWithinRadiusUsers.slice(startIndex, endIndex);
+
+        return new PaginationHandler(limit, page, docs, totalDocs).toPaginationResponse();
     }
 }
+
 
 export default UserDao;
