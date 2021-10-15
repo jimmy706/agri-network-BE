@@ -38,11 +38,9 @@ app.use('/api', BaseRouter);
 
 // Print API errors
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-app.use((err: Error, req: Request, res: Response, next: NextFunction) => {
+app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     logger.err(err, true);
-    return res.status(BAD_REQUEST).json({
-        error: err,
-    });
+    return res.status(err.status || BAD_REQUEST).json(err);
 });
 
 

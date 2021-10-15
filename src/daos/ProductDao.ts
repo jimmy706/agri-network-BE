@@ -1,12 +1,14 @@
 import ErrorMessages from "@constant/errors";
-import ProductModel, { Product } from "@entities/Product";
+import ProductModel, { Product, ProductDetail } from "@entities/Product";
 import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 import { runNeo4jQuery } from "@config/neo4j";
+import StatusCodes from 'http-status-codes';
+const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, FORBIDDEN } = StatusCodes;
 
 export const DEFAULT_LIMIT_PRODUCTS_RENDER = 10;
 
 export enum SortProduct {
-    NAME = 1, VIEWS = 2, CREATED_DATE = 3    
+    NAME = 1, VIEWS = 2, CREATED_DATE = 3
 }
 
 export class SearchProductCriteria {
@@ -42,7 +44,7 @@ export class SearchProductCriteria {
         if (this.owner) {
             result.owner = Types.ObjectId(this.owner);
         }
-        if(this.categories) {
+        if (this.categories) {
             result.categories = {
                 $in: this.categories
             }
@@ -85,12 +87,12 @@ CREATE (u)-[:PROVIDED]->(p)`;
 
         // Wait for product imported
         setTimeout(() => {
-            for(let cate of newProduct.categories) {
+            for (let cate of newProduct.categories) {
                 const queryStringCreateRelationship = `
 MATCH (p:Product{id: "${String(newProduct._id)}"})                
 MATCH (c:Category{id: "${cate}"})
 CREATE (p)-[:BELONGED_TO]->(c)
-                `;           
+                `;
                 runNeo4jQuery(queryStringCreateRelationship);
             }
         }, 2000);
@@ -98,14 +100,61 @@ CREATE (p)-[:BELONGED_TO]->(c)
         return result;
     }
 
-    public async getById(id: string): Promise<Product> {
-        const result = await ProductModel.findById(id)
+    public async getById(id: string): Promise<any> {
+        const product = await ProductModel.findById(id)
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
-        result.views = result.views += 1;
-        await result.save();
+        product.views = product.views += 1;
+        await product.save();
 
-        return result;
+        const searchProductsFromOwnerCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
+        searchProductsFromOwnerCriteria.sort = SortProduct.NAME;
+        searchProductsFromOwnerCriteria.owner = product.owner;
+        const relatedProductsFromOwner = await this.search(searchProductsFromOwnerCriteria);
+
+        const searchProductsRelatedToCategoryCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
+        searchProductsRelatedToCategoryCriteria.categories = product.categories;
+        searchProductsRelatedToCategoryCriteria.sort = SortProduct.VIEWS;
+        const relatedCategoriesProducts = await this.search(searchProductsRelatedToCategoryCriteria);
+
+
+        return {
+            ...product.toObject(),
+            fromOwnerProducts: relatedProductsFromOwner.docs.filter(p => p._id !== product._id),
+            relatedProducts: relatedCategoriesProducts.docs.filter(p => p._id !== product._id)
+        };
+    }
+
+    public async deleteById(id: string, userId: string): Promise<void> {
+        const product = await ProductModel.findById(id).orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
+        if (product.owner == userId) {
+            const deleteQuery = `MATCH (p:Product{id: $id}) DETACH DELETE p`;
+            const deleteQueryParams = {
+                id: product._id
+            }
+
+            await runNeo4jQuery(deleteQuery, deleteQueryParams);
+        }
+        else {
+            throw new ResponseError(ErrorMessages.ACTION_DISMISS, FORBIDDEN); 
+        }
+    }
+
+    public async update(id: string, product: Product, userId: string) {
+        const productUpdating = await ProductModel.findById(id).orFail(new ResponseError(ErrorMessages.PRODUCT_NOT_FOUND, NOT_FOUND));
+        if (productUpdating.owner == userId) {
+            productUpdating.name = product.name;
+            productUpdating.price = product.price;
+            productUpdating.categories = product.categories;
+            productUpdating.thumbnails = product.thumbnails;
+            productUpdating.quantity = product.quantity;
+            productUpdating.quantityType = product.quantityType;
+
+            await productUpdating.save();
+        }
+        else {
+            throw new ResponseError(ErrorMessages.ACTION_DISMISS, FORBIDDEN);
+        }
     }
 
     public async search(criteria: SearchProductCriteria): Promise<PaginateResult<Product>> {

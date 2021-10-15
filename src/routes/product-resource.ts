@@ -43,6 +43,23 @@ export async function add(req: Request, res: Response): Promise<Response> {
     }
 }
 
+export async function deleteById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const authUser = JSON.parse(req.params.authUser) as User;
+    await productDao.deleteById(id, authUser._id);
+    
+    return res.status(OK).json();
+}
+
+export async function updateById(req: Request, res: Response) {
+    const { id } = req.params;
+    const authUser = JSON.parse(req.params.authUser) as User;
+
+    await productDao.update(id, req.body, authUser._id);
+
+    return res.status(OK).json();
+}
+
 export async function getById(req: Request, res: Response): Promise<Response> {
     const { id } = req.params;
 
