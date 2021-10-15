@@ -67,7 +67,6 @@ export class SearchProductCriteria {
 
 class ProductDao {
     public async add(product: Product): Promise<Product> {
-        console.log(product);
         const newProduct = new ProductModel(product);
         newProduct.createdDate = new Date();
         newProduct.views = 0;
