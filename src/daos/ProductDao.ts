@@ -3,6 +3,7 @@ import ProductModel, { Product, ProductDetail } from "@entities/Product";
 import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 import { runNeo4jQuery } from "@config/neo4j";
 import StatusCodes from 'http-status-codes';
+import ResponseError from "@entities/ResponseError";
 const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, FORBIDDEN } = StatusCodes;
 
 export const DEFAULT_LIMIT_PRODUCTS_RENDER = 10;
