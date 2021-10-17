@@ -143,7 +143,7 @@ class RecommendDao {
                 return d1 - d2;
             }
 
-            return -1;
+            return 0;
         });
     }
 

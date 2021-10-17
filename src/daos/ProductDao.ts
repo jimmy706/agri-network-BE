@@ -61,7 +61,7 @@ export class SearchProductCriteria {
             case SortProduct.NAME:
                 return { name: 1 }
             case SortProduct.VIEWS:
-                return { views: -1 }
+                return { numberOfViews: -1 }
             default:
                 return { name: 1 }
         }
@@ -72,7 +72,6 @@ class ProductDao {
     public async add(product: Product): Promise<Product> {
         const newProduct = new ProductModel(product);
         newProduct.createdDate = new Date();
-        newProduct.views = 0;
         const result = await newProduct.save();
 
         const queryStr = `
@@ -105,12 +104,13 @@ CREATE (p)-[:BELONGED_TO]->(c)
         const product = await ProductModel.findById(id)
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
             .orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
-        product.views = product.views += 1;
+        product.numberOfViews+=1;
         await product.save();
-
+        
+        const userOwner = product.owner as any;
         const searchProductsFromOwnerCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
         searchProductsFromOwnerCriteria.sort = SortProduct.NAME;
-        searchProductsFromOwnerCriteria.owner = product.owner;
+        searchProductsFromOwnerCriteria.owner = String(userOwner._id);
         const relatedProductsFromOwner = await this.search(searchProductsFromOwnerCriteria);
 
         const searchProductsRelatedToCategoryCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
@@ -121,8 +121,8 @@ CREATE (p)-[:BELONGED_TO]->(c)
 
         return {
             ...product.toObject(),
-            fromOwnerProducts: relatedProductsFromOwner.docs.filter(p => p._id !== product._id),
-            relatedProducts: relatedCategoriesProducts.docs.filter(p => p._id !== product._id)
+            fromOwnerProducts: relatedProductsFromOwner.docs.filter(p => p._id != String(product._id)),
+            relatedProducts: relatedCategoriesProducts.docs.filter(p => p._id != String(product._id))
         };
     }
 
@@ -133,7 +133,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
             const deleteQueryParams = {
                 id: product._id
             }
-
+            await product.remove();
             await runNeo4jQuery(deleteQuery, deleteQueryParams);
         }
         else {
@@ -164,7 +164,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
         const paginationOptions: PaginateOptions = {
             page,
             limit,
-            select: 'name price owner views thumbnails',
+            select: 'name price owner numberOfViews thumbnails',
             sort: criteria.getSort(),
         };
         const products: PaginateResult<Product> = await new Promise((resolve, reject) => {

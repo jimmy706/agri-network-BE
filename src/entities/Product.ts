@@ -19,7 +19,7 @@ export interface Product extends Document {
     quantityType: QuantityType;
     owner: string;
     createdDate: Date;
-    views: number;
+    numberOfViews: number;
     thumbnails: string[]
 }
 
@@ -52,7 +52,8 @@ export const ProductSchema = new Schema<Product>({
     },
     quantity: {
         type: Number,
-        default: 1
+        default: 1,
+        require: true
     },
     quantityType: {
         type: String,
@@ -77,15 +78,15 @@ export const ProductSchema = new Schema<Product>({
         require: true,
         default: new Date()
     },
-    views: {
-        tpye: Number,
-        require: false,
-        default: 0
-    },
     thumbnails: {
         type: [String],
         require: false,
         default: []
+    },
+    numberOfViews: {
+        type: Number,
+        require: true,
+        default: 1
     }
 });
 ProductSchema.plugin(mongoosePaginate);

@@ -1,10 +1,16 @@
 import { Schema, model } from 'mongoose';
+import Attribute, { AttributeSchema } from './Attribute';
 
+
+export enum Topics {
+    PRODUCT_REQUEST = 'Nhu cầu mua hàng'
+}
 
 export interface Interest {
     user: string;
-    topic: string;
-    viewDate: Date;
+    topic: Topics;
+    createdDate: Date;
+    attrinutes: Attribute[]
 }
 
 export const InterestSchema = new Schema<Interest>({
@@ -15,13 +21,18 @@ export const InterestSchema = new Schema<Interest>({
     },
     topic: {
         type: String,
-        require: true
+        require: true,
+        default: Topics.PRODUCT_REQUEST,
+        enum: [
+            Topics.PRODUCT_REQUEST
+        ]
     }, 
-    viewDate: {
+    createdDate: {
         type: Date,
         require: true,
         default: new Date()
-    }
+    },
+    attrinutes: [AttributeSchema]
 });
 
 const InterestModel = model<Interest>('Interest', InterestSchema);
