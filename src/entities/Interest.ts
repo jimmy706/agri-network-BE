@@ -1,16 +1,16 @@
-import { Schema, model } from 'mongoose';
+import { Schema, model, PaginateModel, Document } from 'mongoose';
 import Attribute, { AttributeSchema } from './Attribute';
-
+const mongoosePaginate = require('mongoose-paginate-v2');
 
 export enum Topics {
     PRODUCT_REQUEST = 'Nhu cầu mua hàng'
 }
 
-export interface Interest {
+export interface Interest extends Document {
     user: string;
     topic: Topics;
     createdDate: Date;
-    attrinutes: Attribute[]
+    attributes: Attribute[]
 }
 
 export const InterestSchema = new Schema<Interest>({
@@ -32,9 +32,12 @@ export const InterestSchema = new Schema<Interest>({
         require: true,
         default: new Date()
     },
-    attrinutes: [AttributeSchema]
+    attributes: [AttributeSchema]
 });
+InterestSchema.plugin(mongoosePaginate);
 
-const InterestModel = model<Interest>('Interest', InterestSchema);
+interface InterestModelInf<T extends Document> extends PaginateModel<T> {};
+
+const InterestModel = model<Interest>('Interest', InterestSchema) as InterestModelInf<Interest>;
 
 export default InterestModel;

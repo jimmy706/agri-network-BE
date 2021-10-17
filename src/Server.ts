@@ -11,7 +11,7 @@ import logger from '@shared/Logger';
 
 import mongoose from 'mongoose';
 const app = express();
-const { BAD_REQUEST } = StatusCodes;
+const { INTERNAL_SERVER_ERROR } = StatusCodes;
 
 
 
@@ -40,7 +40,7 @@ app.use('/api', BaseRouter);
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 app.use((err: any, req: Request, res: Response, next: NextFunction) => {
     logger.err(err, true);
-    return res.status(err.status || BAD_REQUEST).json(err);
+    return res.status(err.status || INTERNAL_SERVER_ERROR).json(err);
 });
 
 

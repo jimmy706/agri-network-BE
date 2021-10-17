@@ -8,6 +8,7 @@ import userRouter from './user-router';
 import tagRouter from './tag-router';
 import categoryRouter from './category-router';
 import productRouter from './product-router';
+import interestRouter from './interest-router';
 
 
 
@@ -27,4 +28,5 @@ baseRouter.use('/recommend', recommendRouter);
 baseRouter.use('/tag', tagRouter);
 baseRouter.use('/category', categoryRouter);
 baseRouter.use('/products', productRouter);
+baseRouter.use('/interests', interestRouter);
 export default baseRouter;
