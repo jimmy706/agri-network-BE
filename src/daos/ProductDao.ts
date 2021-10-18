@@ -103,6 +103,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
     public async getById(id: string): Promise<any> {
         const product = await ProductModel.findById(id)
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
+            .populate({ path: 'categories', select: 'name' })
             .orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
         product.numberOfViews+=1;
         await product.save();
