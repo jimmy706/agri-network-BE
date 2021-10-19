@@ -1,5 +1,5 @@
 import InterestModel, { Interest } from "@entities/Interest";
-import { FilterQuery, PaginateOptions, PaginateResult } from "mongoose";
+import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 
 export const DEFAULT_LIMIT_INTEREST = 3;
 
@@ -8,21 +8,19 @@ export class SearchInterestCriteria {
     page: number;
     fromDate?: Date;
     toDate?: Date;
-    user?:string;
+    user?: string;
 
     public constructor(limit: number, page: number) {
         this.limit = limit;
         this.page = page;
     }
 
-    public toQuery():FilterQuery<Interest> {
+    public toQuery(): FilterQuery<Interest> {
         let result: any = {};
-        if(this.user){
-            result.user = {
-                $match: this.user
-            }
+        if (this.user) {
+            result.user = Types.ObjectId(this.user)
         }
-        if(this.fromDate && this.toDate) {
+        if (this.fromDate && this.toDate) {
             result.createdDate = {
                 $gte: this.fromDate,
                 $lte: this.toDate
@@ -41,7 +39,7 @@ export default class InterestDao {
 
         return newInterest;
     }
-    
+
 
     public async search(criteria: SearchInterestCriteria) {
         const query = criteria.toQuery();
@@ -52,7 +50,7 @@ export default class InterestDao {
         }
         const interests: PaginateResult<Interest> = await new Promise((resolve, reject) => {
             InterestModel.paginate(query, options, (error, result) => {
-                if(error) {
+                if (error) {
                     reject(error);
                 }
                 else {

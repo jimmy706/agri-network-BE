@@ -62,3 +62,17 @@ export async function getRecommendedProductsFromFriends(req: Request, res: Respo
     }
     return res.status(UNAUTHORIZED).json();
 }
+
+export async function getPopularProducts(req: Request, res: Response) {
+    const authUser = JSON.parse(req.params.authUser) as User;
+
+    const result = await recommendDao.getPopularProducts(authUser._id);
+    return res.status(OK).json(result);
+}
+
+export async function getProductsFeed(req: Request, res: Response) {
+    const authUser = JSON.parse(req.params.authUser) as User;
+    const result = await recommendDao.generateProductFeeds(authUser._id);
+
+    return res.status(OK).json(result);
+}

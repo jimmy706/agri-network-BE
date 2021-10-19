@@ -10,7 +10,9 @@ export default class AttributeConverter {
     public toMap(): Map<string, string> {
         const result = new Map<string, string>();
         this.attributes.forEach(attr => {
-            result.set(attr.name, attr.value);
+            if (!result.has(attr.name)) {
+                result.set(attr.name, attr.value);
+            }
         })
 
         return result;

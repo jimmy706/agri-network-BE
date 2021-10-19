@@ -8,11 +8,16 @@ import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserD
 import mongoose from 'mongoose';
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
 import ProductModel, { Product } from "@entities/Product";
+import InterestDao, { SearchInterestCriteria } from "./InterestDao";
+import AttributeConverter from "@utils/AttributesConverter";
+
+const DECLINE_POINT = 2;
 
 class RecommendDao {
     private priority = ['ward', 'district', 'province'];
     private userDao: UserDao = new UserDao();
     private productDao: ProductDao = new ProductDao();
+    private interestDao: InterestDao = new InterestDao();
 
     public async getRecommendedUsers(userId: string): Promise<RecommendUser[]> {
 
@@ -20,7 +25,7 @@ class RecommendDao {
         const uids = new Set<string>();
         let priorityIndex = 0;
 
-        while(priorityIndex <= this.priority.length && uids.size < DEFAULT_LIMIT_USERS_RENDER) {
+        while (priorityIndex <= this.priority.length && uids.size < DEFAULT_LIMIT_USERS_RENDER) {
             const queryUsers = await this.queryRecommendUserPlacesBaseOnCriteria(currentUser, this.priority[priorityIndex]);
             for (let record of queryUsers.records) {
                 const uid = record.get('other.uid');
@@ -44,9 +49,9 @@ class RecommendDao {
             uids.add(uid);
         }
         const users = [];
-        for(let uid of uids) {
+        for (let uid of uids) {
             const user = await UserModel.findById(uid).select("firstName lastName _id email type avatar location");
-            if(user) {
+            if (user) {
                 users.push(user);
             }
         }
@@ -62,7 +67,7 @@ class RecommendDao {
             const pendingFriendRequest = friendRequestExits[i] == null || undefined ? false : true;
             result.push({ ...users[i].toObject(), pendingFriendRequest, isFriend: false, distance: -1 });
         }
-        if(currentUser.location) {
+        if (currentUser.location) {
             return this.sortRecommendUser(result, currentUser).slice(0, DEFAULT_LIMIT_USERS_RENDER);
         }
 
@@ -75,7 +80,7 @@ class RecommendDao {
         const queryUserNearbyResult = await this.userDao.search(userId, queryCriteria);
         let result = [];
 
-        if(queryUserNearbyResult.docs.length > 0) {
+        if (queryUserNearbyResult.docs.length > 0) {
             const usersNearby = queryUserNearbyResult.docs;
             const uids = usersNearby.map(u => u._id);
             const queryProducts = await Promise.all(uids.map(uid => {
@@ -86,12 +91,12 @@ class RecommendDao {
             }));
 
             for (let queryResult of queryProducts) {
-                if(queryResult.totalDocs > 0) {
+                if (queryResult.totalDocs > 0) {
                     result.push(queryResult.docs[0]);
                 }
             }
         }
-        return result;
+        return result.filter(p => p.owner != userId);
     }
 
     public async getRecommendedProductsFromFriends(userId: string): Promise<Product[]> {
@@ -101,17 +106,17 @@ class RecommendDao {
             uid: userId
         }
         const result = await runNeo4jQuery(queryString, queryParams);
-        let productRecords:Map<string, string> = new Map();
+        let productRecords: Map<string, string> = new Map();
         for (let record of result.records) {
             const uid = record.get('friends.uid');
             const pid = record.get('p.id');
-            if(!productRecords.has(uid)) {
+            if (!productRecords.has(uid)) {
                 productRecords.set(uid, pid);
             }
         }
 
         let productIds: any = [];
-        for(let entry of productRecords.entries()) {
+        for (let entry of productRecords.entries()) {
             productIds.push(mongoose.Types.ObjectId(entry[1]));
         }
 
@@ -120,8 +125,113 @@ class RecommendDao {
                 $in: productIds
             }
         });
-        
+
         return products;
+    }
+
+    public async getPopularProducts(userId: string, limit: number = DEFAULT_LIMIT_PRODUCTS_RENDER): Promise<Product[]> {
+        const result = await ProductModel.aggregate([
+            {
+                $addFields: {
+                    calculatetableCreatedDate: {
+                        $convert: {
+                            input: '$createdDate',
+                            to: 'long'
+                        }
+                    }
+                }
+            },
+            {
+                $addFields: {
+                    rankPoint: {
+                        $divide: [
+                            "$numberOfViews",
+                            {
+                                $pow: [
+                                    {
+                                        $subtract: [new Date().getTime(), "$calculatetableCreatedDate"]
+                                    },
+                                    DECLINE_POINT]
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                $sort: {
+                    rankPoint: -1
+                }
+            },
+            {
+                $project: {
+                    price: 1, name: 1, numberOfViews: 1, thumbnails: 1, owner: 1,
+                }
+            },
+            {
+                $limit: limit
+            }
+        ]);
+
+        return result.filter(p => p.owner != userId) as Product[];
+    }
+
+    public async getRecommededProductBaseOnInterest(userId: string): Promise<Product[]> {
+        const criteria = new SearchInterestCriteria(1, 1);
+        criteria.user = userId;
+        const interestRequests = await this.interestDao.search(criteria);
+        if (interestRequests.docs.length > 0) {
+            const interestObj = interestRequests.docs[0];
+            const attributes = new AttributeConverter(interestObj.attributes).toMap();
+            const searchProductCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
+
+            if (attributes.has('name')) {
+                searchProductCriteria.name = attributes.get('name');
+            }
+            if (attributes.has('priceFrom') && attributes.has('priceTo')) {
+                searchProductCriteria.priceFrom = parseInt(attributes.get('priceFrom') as string);
+                searchProductCriteria.priceTo = parseInt(attributes.get('priceTo') as string);
+            }
+            if (attributes.has('category')) {
+                const category = attributes.get('category') as string;
+                searchProductCriteria.categories = [category];
+            }
+
+            const result = await this.productDao.search(searchProductCriteria);
+            return result.docs.filter(p => p.owner != userId);
+        }
+
+        return [];
+    }
+
+
+    public async generateProductFeeds(userId: string) {
+        const nearByProducts = await this.getRecommendedProductsNearLocation(userId, 25);
+        const productsFromFriends = await this.getRecommendedProductsFromFriends(userId);
+        const popularProducts = await this.getPopularProducts(userId);
+        const maybeInterestProducts = await this.getRecommededProductBaseOnInterest(userId);
+
+        // const forYouProducts: Product[] = [];
+        // nearByProducts.forEach(p => {
+        //     forYouProducts.push(p);
+        // });
+        // productsFromFriends.forEach(p => {
+        //     if (!this.isIncludeProduct(forYouProducts, String(p._id))) {
+        //         forYouProducts.push(p);
+        //     }
+        // });
+        // popularProducts.forEach(p => {
+        //     if (!this.isIncludeProduct(forYouProducts, String(p._id))) {
+        //         forYouProducts.push(p);
+        //     }
+        // });
+
+        return {
+            nearby: nearByProducts,
+            fromFriends: productsFromFriends,
+            popular: popularProducts,
+            // forYou: forYouProducts,
+            maybeInterest: maybeInterestProducts
+        }
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
@@ -166,6 +276,10 @@ class RecommendDao {
 
             return runNeo4jQuery(queryString);
         }
+    }
+
+    private isIncludeProduct(products: Product[], pid: string): boolean {
+        return products.findIndex(p => p._id == pid) > -1;
     }
 }
 
