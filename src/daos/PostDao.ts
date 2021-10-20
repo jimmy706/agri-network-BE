@@ -149,7 +149,7 @@ export default class PostDao {
         const paginateOptions: PaginateOptions = {
             page,
             limit,
-            select: 'lastModified format images _id content postedBy tags',
+            select: 'lastModified format images _id content postedBy tags attributes ref',
             sort: { createdDate: 'desc' },
             populate: { path: 'postedBy', select: 'firstName lastName avatar ' },
         }

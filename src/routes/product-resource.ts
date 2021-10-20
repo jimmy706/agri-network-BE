@@ -4,13 +4,17 @@ import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortP
 import logger from '@shared/Logger';
 import { User } from '@entities/User';
 import { Product } from '@entities/Product';
+import PostDao from '@daos/PostDao';
+import { PostFormat } from '@entities/Post';
+import Attribute from '@entities/Attribute';
 
 const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, } = StatusCodes;
 
 const productDao = new ProductDao();
+const postDao = new PostDao();
 
 function toSortProduct(n: number) {
-    switch(n) {
+    switch (n) {
         case 1:
             return SortProduct.NAME;
         case 2:
@@ -18,7 +22,7 @@ function toSortProduct(n: number) {
         case 3:
             return SortProduct.CREATED_DATE;
         default:
-            return SortProduct.NAME;            
+            return SortProduct.NAME;
     }
 }
 
@@ -28,11 +32,33 @@ export async function add(req: Request, res: Response): Promise<Response> {
         try {
             const product = req.body as Product;
             product.owner = authUser._id;
-
             const newProduct = await productDao.add(product);
+            const categories = newProduct.categories as any[];
+
+            console.log(categories);
+
+            if (product.isBroadCasted) {
+                const attributes: Attribute[] = [];
+                attributes.push({ name: 'name', value: newProduct.name });
+                attributes.push({ name: 'price', value: String(newProduct.price) });
+                if (newProduct.thumbnails.length > 0) {
+                    attributes.push({ name: 'thumbnail', value: newProduct.thumbnails[0] });
+                }
+
+                const newPost = {
+                    content: `${authUser.lastName} vừa đăng một sản phẩm mới`,
+                    images: [],
+                    tags: categories.map(cate => cate.name),
+                    format: PostFormat.SELL,
+                    ref: newProduct._id,
+                    postedBy: authUser._id,
+                    attributes
+                } as any;
+                await postDao.add(newPost);
+            }
             return res.status(CREATED).json(newProduct);
         }
-        catch(error) {
+        catch (error) {
             logger.err(error);
             return res.status(BAD_REQUEST).json(error);
         }
@@ -47,7 +73,7 @@ export async function deleteById(req: Request, res: Response): Promise<Response>
     const { id } = req.params;
     const authUser = JSON.parse(req.params.authUser) as User;
     await productDao.deleteById(id, authUser._id);
-    
+
     return res.status(OK).json();
 }
 
@@ -67,7 +93,7 @@ export async function getById(req: Request, res: Response): Promise<Response> {
         const result = await productDao.getById(id);
         return res.status(OK).json(result);
     }
-    catch(error) {
+    catch (error) {
         logger.err(error);
         return res.status(NOT_FOUND).json(error);
     }
@@ -80,23 +106,23 @@ export async function search(req: Request, res: Response): Promise<Response> {
 
     try {
         const { limit, page, name, owner, priceFrom, priceTo, categories, sort = "1" } = req.query;
-        if(limit) {
+        if (limit) {
             query.limit = parseInt(limit as string);
         }
-        if(page) {
+        if (page) {
             query.page = parseInt(page as string);
         }
-        if(name) {
+        if (name) {
             query.name = name as string;
         }
-        if(owner) {
+        if (owner) {
             query.owner = owner as string;
         }
-        if(priceFrom && priceTo) {
+        if (priceFrom && priceTo) {
             query.priceFrom = parseFloat(priceFrom as string);
             query.priceTo = parseFloat(priceTo as string);
         }
-        if(categories) {
+        if (categories) {
             query.categories = String(categories).split(",").map(cate => cate.trim());
         }
         query.sort = toSortProduct(parseInt(sort as string));
@@ -105,7 +131,7 @@ export async function search(req: Request, res: Response): Promise<Response> {
 
         return res.status(OK).json(result);
     }
-    catch(error) {
+    catch (error) {
         logger.err(error);
         return res.status(BAD_REQUEST).json(error);
     }

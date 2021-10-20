@@ -10,7 +10,8 @@ export interface Interest extends Document {
     user: string;
     topic: Topics;
     createdDate: Date;
-    attributes: Attribute[]
+    attributes: Attribute[],
+    _id: string
 }
 
 export const InterestSchema = new Schema<Interest>({

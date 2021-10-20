@@ -1,22 +1,25 @@
 import { Document, model, PaginateModel, Schema } from 'mongoose';
+import Attribute, { AttributeSchema } from './Attribute';
 
 const mongoosePaginate = require('mongoose-paginate-v2');
 
 export enum PostFormat {
     REGULAR = 'REGULAR',
-    SELL= 'SELL',
-    PLAN = 'PLAN'
+    SELL = 'SELL',
+    PLAN = 'PLAN',
+    INTEREST_REQUEST = 'INTEREST_REQUEST'
 }
 
-export interface Post extends Document{
+export interface Post extends Document {
     content: string;
     postedBy: string;
     createdDate: Date;
     lastModified: Date;
     format: PostFormat;
-    ref: Map<string, string>;
+    ref?: string;
     images: string[];
     tags: string[];
+    attributes?: Attribute[];
 }
 
 
@@ -46,12 +49,17 @@ export const PostSchema = new Schema<Post>({
         enum: [
             PostFormat.REGULAR,
             PostFormat.PLAN,
-            PostFormat.SELL
+            PostFormat.SELL,
+            PostFormat.INTEREST_REQUEST
         ]
     },
     ref: {
         require: false,
-        type: Schema.Types.Mixed
+        type: String
+    },
+    attributes: {
+        type: [AttributeSchema],
+        require: false
     },
     images: [String],
     tags: [String]
@@ -59,7 +67,7 @@ export const PostSchema = new Schema<Post>({
 
 PostSchema.plugin(mongoosePaginate);
 
-interface PostModelInf<T extends Document> extends PaginateModel<T> {}
+interface PostModelInf<T extends Document> extends PaginateModel<T> { }
 
 const PostModel = model<Post>('Post', PostSchema) as PostModelInf<Post>;
 

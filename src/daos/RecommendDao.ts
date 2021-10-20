@@ -210,21 +210,6 @@ class RecommendDao {
         const popularProducts = await this.getPopularProducts(userId);
         const maybeInterestProducts = await this.getRecommededProductBaseOnInterest(userId);
 
-        // const forYouProducts: Product[] = [];
-        // nearByProducts.forEach(p => {
-        //     forYouProducts.push(p);
-        // });
-        // productsFromFriends.forEach(p => {
-        //     if (!this.isIncludeProduct(forYouProducts, String(p._id))) {
-        //         forYouProducts.push(p);
-        //     }
-        // });
-        // popularProducts.forEach(p => {
-        //     if (!this.isIncludeProduct(forYouProducts, String(p._id))) {
-        //         forYouProducts.push(p);
-        //     }
-        // });
-
         return {
             nearby: nearByProducts,
             fromFriends: productsFromFriends,

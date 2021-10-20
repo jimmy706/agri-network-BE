@@ -97,7 +97,11 @@ CREATE (p)-[:BELONGED_TO]->(c)
             }
         }, 2000);
 
-        return result;
+        const resultPrd = await ProductModel.findById(newProduct._id)
+            .populate({ path: 'categories', select: 'name' })
+            .orFail(new ResponseError(ErrorMessages.PRODUCT_NOT_FOUND, NOT_FOUND));
+
+        return resultPrd;
     }
 
     public async getById(id: string): Promise<any> {
@@ -105,9 +109,9 @@ CREATE (p)-[:BELONGED_TO]->(c)
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
             .populate({ path: 'categories', select: 'name' })
             .orFail(new Error(ErrorMessages.PRODUCT_NOT_FOUND));
-        product.numberOfViews+=1;
+        product.numberOfViews += 1;
         await product.save();
-        
+
         const userOwner = product.owner as any;
         const searchProductsFromOwnerCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
         searchProductsFromOwnerCriteria.sort = SortProduct.NAME;
@@ -138,7 +142,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
             await runNeo4jQuery(deleteQuery, deleteQueryParams);
         }
         else {
-            throw new ResponseError(ErrorMessages.ACTION_DISMISS, FORBIDDEN); 
+            throw new ResponseError(ErrorMessages.ACTION_DISMISS, FORBIDDEN);
         }
     }
 

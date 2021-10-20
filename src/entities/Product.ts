@@ -20,7 +20,8 @@ export interface Product extends Document {
     owner: string;
     createdDate: Date;
     numberOfViews: number;
-    thumbnails: string[]
+    thumbnails: string[];
+    isBroadCasted?: boolean;
 }
 
 export interface ProductDetail extends Product {
