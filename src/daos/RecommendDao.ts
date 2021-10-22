@@ -1,15 +1,15 @@
 import { runNeo4jQuery } from "@config/neo4j";
 import ErrorMessages from "@constant/errors";
 import FriendRequestModel from "@entities/FriendRequest";
-import UserModel, { RecommendUser, User } from "@entities/User";
-import LocationHandler from "@utils/LocationHandler";
-import { Result } from "neo4j-driver-core";
-import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
-import mongoose from 'mongoose';
-import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
 import ProductModel, { Product } from "@entities/Product";
-import InterestDao, { SearchInterestCriteria } from "./InterestDao";
+import UserModel, { RecommendUser, User } from "@entities/User";
 import AttributeConverter from "@utils/AttributesConverter";
+import LocationHandler from "@utils/LocationHandler";
+import mongoose from 'mongoose';
+import { Result } from "neo4j-driver-core";
+import InterestDao, { SearchInterestCriteria } from "./InterestDao";
+import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
+import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
 
 const DECLINE_POINT = 2;
 
@@ -214,7 +214,6 @@ class RecommendDao {
             nearby: nearByProducts,
             fromFriends: productsFromFriends,
             popular: popularProducts,
-            // forYou: forYouProducts,
             maybeInterest: maybeInterestProducts
         }
     }
@@ -263,9 +262,6 @@ class RecommendDao {
         }
     }
 
-    private isIncludeProduct(products: Product[], pid: string): boolean {
-        return products.findIndex(p => p._id == pid) > -1;
-    }
 }
 
 export default RecommendDao;
