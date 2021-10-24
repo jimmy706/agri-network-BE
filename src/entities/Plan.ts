@@ -1,16 +1,49 @@
-import { Schema, model } from 'mongoose';
+import { model, Schema } from 'mongoose';
 import { PlanDetail, PlanDetailSchema } from './PlanDetail';
+import { QuantityType } from './Product';
+
+export interface HarvestProduct {
+    name: string;
+    quantity: number;
+    quantityType: QuantityType;
+}
 
 export interface Plan {
+    _id: string;
     from: Date;
     to: Date;
     expired: boolean;
     name: string;
     plantDetails: PlanDetail[];
     owner: string;
+    result: HarvestProduct;
 }
 
-export const PlanSchema = new Schema<Plan> ({
+const HarvestProductSchema = new Schema<HarvestProduct>({
+    name: {
+        type: String,
+        require: true
+    },
+    quantity: {
+        type: Number,
+        require: true
+    },
+    quantityType: {
+        type: String,
+        require: true,
+        default: QuantityType.REGULAR,
+        enum: [
+            QuantityType.POUND,
+            QuantityType.WEIGHT,
+            QuantityType.STONE,
+            QuantityType.KG,
+            QuantityType.GRAM,
+            QuantityType.REGULAR
+        ]
+    }
+});
+
+export const PlanSchema = new Schema<Plan>({
     from: {
         type: Date,
         require: true
@@ -33,6 +66,10 @@ export const PlanSchema = new Schema<Plan> ({
     owner: {
         type: Schema.Types.ObjectId,
         ref: 'User'
+    },
+    result: {
+        type: HarvestProductSchema,
+        require: true
     }
 });
 

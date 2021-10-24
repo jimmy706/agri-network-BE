@@ -1,10 +1,10 @@
+import SuccessMessages from '@constant/success';
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from '@daos/UserDao';
+import { Location } from '@entities/Location';
 import { User } from '@entities/User';
 import logger from '@shared/Logger';
 import { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
-import SuccessMessages from '@constant/success';
-import { Location } from '@entities/Location';
 
 
 const userDao = new UserDao();

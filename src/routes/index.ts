@@ -9,9 +9,7 @@ import tagRouter from './tag-router';
 import categoryRouter from './category-router';
 import productRouter from './product-router';
 import interestRouter from './interest-router';
-
-
-
+import planRouter from './plan-router';
 
 const pingRouter = Router();
 pingRouter.get('/', ping);
@@ -29,4 +27,5 @@ baseRouter.use('/tag', tagRouter);
 baseRouter.use('/category', categoryRouter);
 baseRouter.use('/products', productRouter);
 baseRouter.use('/interests', interestRouter);
+baseRouter.use('/plans', planRouter);
 export default baseRouter;
