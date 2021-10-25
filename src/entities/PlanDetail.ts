@@ -1,10 +1,11 @@
-import { Schema, model } from 'mongoose';
-import Attribute, { AttributeSchema } from './Attribute';
+import { model, Schema } from 'mongoose';
 
 export interface PlanDetail {
     name: string;
     from: Date;
     to: Date;
+    neededFactors: Needed[];
+    isBroadcasted: boolean;
 }
 
 export interface Needed {
@@ -22,7 +23,7 @@ const NeededSchema = new Schema<Needed>({
     priceRange: {
         type: [Number],
         default: [0, Number.MAX_VALUE]
-    }
+    },
 })
 
 export const PlanDetailSchema = new Schema<PlanDetail>({
@@ -41,6 +42,10 @@ export const PlanDetailSchema = new Schema<PlanDetail>({
     neededFactors: {
         type: [NeededSchema],
         default: []
+    },
+    isBroadcasted: {
+        type: Boolean,
+        default: false
     }
 });
 

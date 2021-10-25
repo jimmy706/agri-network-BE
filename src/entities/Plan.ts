@@ -1,4 +1,4 @@
-import { model, Schema } from 'mongoose';
+import { Document, model, Schema } from 'mongoose';
 import { PlanDetail, PlanDetailSchema } from './PlanDetail';
 import { QuantityType } from './Product';
 
@@ -8,7 +8,7 @@ export interface HarvestProduct {
     quantityType: QuantityType;
 }
 
-export interface Plan {
+export interface Plan extends Document {
     _id: string;
     from: Date;
     to: Date;
