@@ -1,7 +1,9 @@
 import { runNeo4jQuery } from "@config/neo4j";
 import ErrorMessages from "@constant/errors";
 import FriendRequestModel from "@entities/FriendRequest";
-import ProductModel, { Product } from "@entities/Product";
+import InterestModel from "@entities/Interest";
+import ProductModel, { Product } from "@entities/product/Product";
+import ProvideProductRange from "@entities/product/ProductRangeInfo";
 import UserModel, { RecommendUser, User } from "@entities/User";
 import AttributeConverter from "@utils/AttributesConverter";
 import LocationHandler from "@utils/LocationHandler";
@@ -10,6 +12,9 @@ import { Result } from "neo4j-driver-core";
 import InterestDao, { SearchInterestCriteria } from "./InterestDao";
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
+
+const dayjs = require("dayjs");
+
 
 const DECLINE_POINT = 2;
 
@@ -216,6 +221,90 @@ class RecommendDao {
             popular: popularProducts,
             maybeInterest: maybeInterestProducts
         }
+    }
+
+    public async getDemandedUsers(userId: string) {
+        const searchProductCriteria = new SearchProductCriteria(DEFAULT_LIMIT_PRODUCTS_RENDER, 1);
+        searchProductCriteria.owner = userId;
+        const productsFromUser = await this.productDao.search(searchProductCriteria);
+
+        const products = productsFromUser.docs;
+        const productProvideInfo = this.getProductProvideRange(products);
+
+        const now = new Date();
+        const fromDate = new Date(new Date().setMonth(now.getMonth() - 1));
+        const interests: any = await InterestModel
+            .find({
+                createdDate: {
+                    $gte: fromDate,
+                    $lte: now,
+                },
+            })
+            .populate({ path: 'user', select: 'firstName lastName avatar phoneNumber location' });
+
+        return this.getUsersMatchProvidedRage(productProvideInfo, interests);
+    }
+
+    private getProductProvideRange(products: Product[]): ProvideProductRange {
+        const productProvideInfo: ProvideProductRange = {
+            names: [],
+            categories: new Set<string>(),
+            priceRange: [0, Number.MAX_VALUE]
+        }
+
+        let minPrice = Number.MAX_VALUE;
+        let maxPrice = 0;
+        products.forEach(prod => {
+            productProvideInfo.names.push(prod.name.trim().toLowerCase());
+            if (prod.categories?.length > 0) {
+                prod.categories.forEach(cate => {
+                    if (!productProvideInfo.categories.has(String(cate))) {
+                        productProvideInfo.categories.add(String(cate));
+                    }
+                });
+            }
+            const price = prod.price;
+            if (minPrice > price) {
+                minPrice = price;
+            }
+            if (maxPrice < price) {
+                maxPrice = price;
+            }
+        });
+        productProvideInfo.priceRange = [minPrice, maxPrice];
+
+        return productProvideInfo;
+    }
+
+    private getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any): User[] {
+        const result: User[] = [];
+        for (let interest of interests) {
+            const attributes = new AttributeConverter(interest.attributes).toMap();
+            if (this.isAttributeMatchedWithProvideProductRage(providedRange, attributes)) {
+                result.push(interest.user);
+            }
+        }
+
+        return result;
+    }
+
+    private isAttributeMatchedWithProvideProductRage(providedRange: ProvideProductRange, attributes: Map<string, string>): boolean {
+        if (!AttributeConverter.hasAttributesNeededForProductRecommendation(attributes)) {
+            return false;
+        }
+        const names = providedRange.names;
+        const categories = Array.from(providedRange.categories);
+        const priceRage = providedRange.priceRange;
+
+        const name = attributes.get('name') as string;
+        const cateory = attributes.get('category') as string;
+        const priceFrom = parseFloat(attributes.get('priceFrom') as string);
+        const priceTo = parseFloat(attributes.get('priceTo') as string);
+
+        return names.some(prodName => prodName.trim().includes(name)) &&
+            categories.includes(cateory)
+            && priceFrom >= priceRage[0]
+            && priceTo <= priceRage[1];
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {

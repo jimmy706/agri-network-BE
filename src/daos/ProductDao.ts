@@ -1,9 +1,9 @@
-import ErrorMessages from "@constant/errors";
-import ProductModel, { Product, ProductDetail } from "@entities/Product";
-import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 import { runNeo4jQuery } from "@config/neo4j";
-import StatusCodes from 'http-status-codes';
+import ErrorMessages from "@constant/errors";
+import ProductModel, { Product } from "@entities/product/Product";
 import ResponseError from "@entities/ResponseError";
+import StatusCodes from 'http-status-codes';
+import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, FORBIDDEN } = StatusCodes;
 
 export const DEFAULT_LIMIT_PRODUCTS_RENDER = 10;
@@ -72,7 +72,7 @@ class ProductDao {
     public async add(product: Product): Promise<Product> {
         const newProduct = new ProductModel(product);
         newProduct.createdDate = new Date();
-        const result = await newProduct.save();
+        await newProduct.save();
 
         const queryStr = `
 MATCH (u:User{uid: "${newProduct.owner}"})        
@@ -169,7 +169,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
         const paginationOptions: PaginateOptions = {
             page,
             limit,
-            select: 'name price numberOfViews thumbnails owner',
+            select: 'name price numberOfViews thumbnails owner categories',
             sort: criteria.getSort(),
         };
         const products: PaginateResult<Product> = await new Promise((resolve, reject) => {

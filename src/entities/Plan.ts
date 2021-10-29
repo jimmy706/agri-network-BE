@@ -1,6 +1,6 @@
 import { Document, model, Schema } from 'mongoose';
 import { PlanDetail, PlanDetailSchema } from './PlanDetail';
-import { QuantityType } from './Product';
+import { QuantityType } from './product/Product';
 
 export interface HarvestProduct {
     name: string;

@@ -1,4 +1,4 @@
-import ProductCategoryModel,{ProductCategory} from "@entities/ProductCategory";
+import ProductCategoryModel,{ProductCategory} from "@entities/product/ProductCategory";
 
 export class ProductCategoryDao{
     async getProductTypes(): Promise<ProductCategory[]>{

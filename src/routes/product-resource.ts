@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from '@daos/ProductDao';
 import logger from '@shared/Logger';
 import { User } from '@entities/User';
-import { Product } from '@entities/Product';
+import { Product } from '@entities/product/Product';
 import PostDao from '@daos/PostDao';
 import { PostFormat } from '@entities/Post';
 import Attribute from '@entities/Attribute';

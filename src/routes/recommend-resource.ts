@@ -11,19 +11,21 @@ const recommendDao: RecommendDao = new RecommendDao();
 export async function getRecommendedUsers(req: Request, res: Response): Promise<Response> {
     const authUser: User = JSON.parse(req.params.authUser);
 
-    if (authUser) {
-        try {
-            const result = await recommendDao.getRecommendedUsers(authUser._id);
-            return res.status(OK).json(result);
-        }
-        catch (error) {
-            logger.err(error);
-            return res.status(BAD_REQUEST).json(error);
-        }
+    try {
+        const result = await recommendDao.getRecommendedUsers(authUser._id);
+        return res.status(OK).json(result);
     }
-    else {
-        return res.status(UNAUTHORIZED).json();
+    catch (error) {
+        logger.err(error);
+        return res.status(BAD_REQUEST).json(error);
     }
+}
+
+export async function getUsersOnDemanded(req: Request, res: Response) {
+    const authUser: User = JSON.parse(req.params.authUser);
+    const result = await recommendDao.getDemandedUsers(authUser._id);
+
+    return res.status(OK).json(result);
 }
 
 export async function getRecommendedProductsNearby(req: Request, res: Response) {

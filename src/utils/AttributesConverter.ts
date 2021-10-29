@@ -17,4 +17,11 @@ export default class AttributeConverter {
 
         return result;
     }
+
+    public static hasAttributesNeededForProductRecommendation(attributes: Map<string, string>): boolean {
+        return attributes.has('name')
+            && attributes.has('category')
+            && attributes.has('priceFrom')
+            && attributes.has('priceTo')
+    }
 }

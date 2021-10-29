@@ -1,6 +1,6 @@
 import StatusCodes from 'http-status-codes';
 import { Request, Response } from 'express';
-import {ProductCategory} from "@entities/ProductCategory";
+import {ProductCategory} from "@entities/product/ProductCategory";
 import { ProductCategoryDao } from '@daos/ProductCategoryDao';
 
 const { OK } = StatusCodes;
