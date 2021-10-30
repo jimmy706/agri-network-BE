@@ -4,7 +4,6 @@ import { Topics } from "@entities/Interest";
 import { Plan } from "@entities/Plan";
 import logger from "@shared/Logger";
 import NeededFactorsConverter from "@utils/NeededFactorsConverter";
-const dayjs = require('dayjs');
 
 const cron = require('node-cron');
 
@@ -42,7 +41,7 @@ class Scheduler {
         const { owner, plantDetails } = plan;
         const now = new Date();
         const currentPlanIndex = plantDetails.findIndex(planDetail => {
-            return dayjs(now).isBetween(planDetail.from, planDetail.to);
+            return planDetail.from <= now && now <= planDetail.to;
         });
         if (currentPlanIndex > -1) {
             const currentPlan = plantDetails[currentPlanIndex];
