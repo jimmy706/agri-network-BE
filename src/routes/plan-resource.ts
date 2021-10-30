@@ -1,5 +1,4 @@
 import PlanDao, { SearchPlanCriteria } from "@daos/PlanDao";
-import { UserType } from "@entities/User";
 import AuthChecker from "@utils/AuthChecker";
 import { Request, Response } from "express";
 import StatusCodes from 'http-status-codes';
@@ -13,7 +12,6 @@ export async function add(req: Request, res: Response) {
     const authChecker = AuthChecker.getInstance();
     const planRequest = req.body;
     const authUser = authChecker.getCurrentLoginUser(req);
-    authChecker.rolesAllowed([UserType.PRODUCER], authUser);
 
     planRequest.owner = authUser._id;
 

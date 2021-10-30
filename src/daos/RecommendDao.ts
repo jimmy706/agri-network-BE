@@ -300,11 +300,11 @@ class RecommendDao {
         const cateory = attributes.get('category') as string;
         const priceFrom = parseFloat(attributes.get('priceFrom') as string);
         const priceTo = parseFloat(attributes.get('priceTo') as string);
-
-        return names.some(prodName => prodName.trim().includes(name)) &&
-            categories.includes(cateory)
+        const check = names.some(prodName => prodName.toLowerCase().trim().includes(name.toLowerCase()))
             && priceFrom >= priceRage[0]
-            && priceTo <= priceRage[1];
+            && priceTo <= priceRage[1]
+            && categories.includes(cateory);
+        return check;
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
