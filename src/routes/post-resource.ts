@@ -40,6 +40,8 @@ export async function add(req: AddNewPostRequest, res: Response): Promise<Respon
 
 export async function getByUser(req: Request, res: Response): Promise<Response> {
     const { owner } = req.params;
+    const authUser: User = JSON.parse(req.params.authUser);
+
     let page = 1;
     let limit = DEFAULT_LIMIT_POST;
     if (req.query.page && req.query.limit) {
@@ -49,8 +51,14 @@ export async function getByUser(req: Request, res: Response): Promise<Response> 
 
     try {
         const result = await postDao.getPostFromUser(owner, page, limit);
-
-        return res.status(OK).json(result);
+        const resultCopy: any = JSON.parse(JSON.stringify(result));
+        const mapCountLikeAndReaction = await Promise.all(result.docs.map(p => {
+            return postDao.getPostCommentsCountAndInteractsCount(authUser._id, p.id);
+        }));
+        resultCopy.docs = resultCopy.docs.map((p: Post, i: number) => {
+            return { ...p, ...mapCountLikeAndReaction[i] };
+        });
+        return res.status(OK).json(resultCopy);
     }
     catch (error) {
         logger.err(error);
