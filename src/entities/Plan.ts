@@ -8,6 +8,12 @@ export interface HarvestProduct {
     quantityType: QuantityType;
 }
 
+export enum PlanStatus {
+    IN_PROGRESS = 'Đang diễn ra',
+    EXPIRED = 'Kết thúc',
+    HARVEST = 'Thu hoạch'
+}
+
 export interface Plan extends Document {
     _id: string;
     from: Date;
@@ -18,6 +24,7 @@ export interface Plan extends Document {
     owner: string;
     result: HarvestProduct;
     progress: number;
+    status: PlanStatus;
 }
 
 const HarvestProductSchema = new Schema<HarvestProduct>({
@@ -75,6 +82,16 @@ export const PlanSchema = new Schema<Plan>({
     progress: {
         type: Number,
         default: 0.0
+    },
+    status: {
+        type: String,
+        require: true,
+        default: PlanStatus.IN_PROGRESS,
+        enum: [
+            PlanStatus.IN_PROGRESS,
+            PlanStatus.EXPIRED,
+            PlanStatus.HARVEST
+        ]
     }
 });
 

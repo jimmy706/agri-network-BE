@@ -48,3 +48,10 @@ export async function search(req: Request, res: Response): Promise<Response> {
     const result = await planDao.search(criteria);
     return res.status(OK).json(result);
 }
+
+export async function getById(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const plan = await planDao.getById(id);
+
+    return res.status(OK).json(plan);
+}

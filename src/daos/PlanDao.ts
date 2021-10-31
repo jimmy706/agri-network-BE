@@ -65,4 +65,11 @@ export default class PlanDao {
 
         return result;
     }
+
+    public async getById(id: string) {
+        const plan = await PlanModel.findById(id)
+        .populate({ path: 'owner', select: 'firstName lastName avatar' })
+        .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+        return plan;
+    }
 }

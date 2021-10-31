@@ -6,5 +6,6 @@ const planRouter = Router();
 planRouter.get('/', auth, planResource.search);
 planRouter.post('/', auth, planResource.add);
 planRouter.delete('/:id', auth, planResource.remove);
+planRouter.get('/:id', auth, planResource.getById);
 
 export default planRouter;

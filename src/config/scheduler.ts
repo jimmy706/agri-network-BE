@@ -1,7 +1,7 @@
 import InterestDao from "@daos/InterestDao";
 import PlanDao, { SearchPlanCriteria } from "@daos/PlanDao";
 import { Topics } from "@entities/Interest";
-import { Plan } from "@entities/Plan";
+import { Plan, PlanStatus } from "@entities/Plan";
 import logger from "@shared/Logger";
 import NeededFactorsConverter from "@utils/NeededFactorsConverter";
 
@@ -20,7 +20,7 @@ class Scheduler {
     private async fetchPlans() {
         const searchPlanCriteria = new SearchPlanCriteria();
         searchPlanCriteria.expired = false;
-        const plans: any = await planDao.search(searchPlanCriteria);
+        const plans: Plan[] = await planDao.search(searchPlanCriteria);
         const now = new Date();
         if (plans.length > 0) {
             logger.info(`Found ${plans.length} going plans`);
@@ -29,6 +29,7 @@ class Scheduler {
             const endDate = plan.to;
             if (now >= endDate) {
                 plan.expired = true;
+                plan.status = PlanStatus.EXPIRED;
                 await plan.save();
             } else {
                 this.broadcastNeededFactors(plan);
