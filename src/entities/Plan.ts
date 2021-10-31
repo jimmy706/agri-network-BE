@@ -17,6 +17,7 @@ export interface Plan extends Document {
     plantDetails: PlanDetail[];
     owner: string;
     result: HarvestProduct;
+    progress: number;
 }
 
 const HarvestProductSchema = new Schema<HarvestProduct>({
@@ -70,6 +71,10 @@ export const PlanSchema = new Schema<Plan>({
     result: {
         type: HarvestProductSchema,
         require: true
+    },
+    progress: {
+        type: Number,
+        default: 0.0
     }
 });
 

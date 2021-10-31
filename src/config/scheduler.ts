@@ -28,7 +28,6 @@ class Scheduler {
         for (let plan of plans) {
             const endDate = plan.to;
             if (now >= endDate) {
-                // TODO: Send notification to owner
                 plan.expired = true;
                 await plan.save();
             } else {
@@ -58,8 +57,18 @@ class Scheduler {
                 }));
 
                 plan.plantDetails[currentPlanIndex].isBroadcasted = true;
-                await plan.save();
             }
+        }
+        let countDonePlanDetail = 0;
+        for (let planDetail of plantDetails) {
+            if (planDetail.from <= now && now <= planDetail.to) {
+                countDonePlanDetail++;
+            }
+        }
+        const currentProgress = countDonePlanDetail / plantDetails.length;
+        if (currentProgress != plan.progress) {
+            plan.progress = currentProgress;
+            await plan.save();
         }
     }
 }

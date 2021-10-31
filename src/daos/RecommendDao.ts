@@ -13,9 +13,6 @@ import InterestDao, { SearchInterestCriteria } from "./InterestDao";
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
 
-const dayjs = require("dayjs");
-
-
 const DECLINE_POINT = 2;
 
 class RecommendDao {
