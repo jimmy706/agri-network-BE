@@ -35,8 +35,6 @@ export async function add(req: Request, res: Response): Promise<Response> {
             const newProduct = await productDao.add(product);
             const categories = newProduct.categories as any[];
 
-            console.log(categories);
-
             if (product.isBroadCasted) {
                 const attributes: Attribute[] = [];
                 attributes.push({ name: 'name', value: newProduct.name });

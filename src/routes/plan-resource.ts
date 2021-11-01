@@ -1,5 +1,9 @@
 import PlanDao, { SearchPlanCriteria } from "@daos/PlanDao";
+import PostDao from "@daos/PostDao";
+import Attribute from "@entities/Attribute";
+import { PostFormat } from "@entities/Post";
 import AuthChecker from "@utils/AuthChecker";
+import PlanToAttributeConverter from "@utils/PlanToAttributeConverter";
 import { Request, Response } from "express";
 import StatusCodes from 'http-status-codes';
 
@@ -7,6 +11,7 @@ import StatusCodes from 'http-status-codes';
 const { CREATED, OK } = StatusCodes;
 
 const planDao = new PlanDao();
+const postDao = new PostDao();
 
 export async function add(req: Request, res: Response) {
     const authChecker = AuthChecker.getInstance();
@@ -16,6 +21,20 @@ export async function add(req: Request, res: Response) {
     planRequest.owner = authUser._id;
 
     const result = await planDao.add(planRequest);
+    const planToAttrconverter = new PlanToAttributeConverter(result);
+   
+    const newPost = {
+        content: `${authUser.lastName} vừa đăng một kế hoạch sản xuất mới.`,
+        images: [],
+        format: PostFormat.PLAN,
+        ref: result._id,
+        postedBy: authUser._id,
+        attributes: planToAttrconverter.toAttributes(),
+        tags: ["chia sẻ", "kế hoạch sản xuất"],
+    } as any;
+
+    await postDao.add(newPost);
+
     return res.status(CREATED).json(result);
 }
 
