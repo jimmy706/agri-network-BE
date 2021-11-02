@@ -239,7 +239,7 @@ class RecommendDao {
             })
             .populate({ path: 'user', select: 'firstName lastName avatar phoneNumber location' });
 
-        return this.getUsersMatchProvidedRage(productProvideInfo, interests);
+        return this.getUsersMatchProvidedRage(productProvideInfo, interests, userId);
     }
 
     private getProductProvideRange(products: Product[]): ProvideProductRange {
@@ -273,7 +273,7 @@ class RecommendDao {
         return productProvideInfo;
     }
 
-    private getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any): User[] {
+    private getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any, currentUserId: string): User[] {
         const result: User[] = [];
         for (let interest of interests) {
             const attributes = new AttributeConverter(interest.attributes).toMap();
@@ -282,7 +282,7 @@ class RecommendDao {
             }
         }
 
-        return result;
+        return result.filter(u => u._id != currentUserId);
     }
 
     private isAttributeMatchedWithProvideProductRage(providedRange: ProvideProductRange, attributes: Map<string, string>): boolean {

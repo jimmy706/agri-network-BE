@@ -8,5 +8,6 @@ productRouter.post('/', auth, productResource.add);
 productRouter.get('/:id', auth, productResource.getById);
 productRouter.put('/:id', auth, productResource.updateById);
 productRouter.delete('/:id', auth, productResource.deleteById);
+productRouter.post('/fromPlan/:planId', auth, productResource.addFromPlan);
 
 export default productRouter;

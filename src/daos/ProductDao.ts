@@ -1,16 +1,20 @@
 import { runNeo4jQuery } from "@config/neo4j";
 import ErrorMessages from "@constant/errors";
+import { PlanStatus } from "@entities/Plan";
 import ProductModel, { Product } from "@entities/product/Product";
 import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
 import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
-const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, FORBIDDEN } = StatusCodes;
+import PlanDao from "./PlanDao";
+const {  NOT_FOUND, FORBIDDEN } = StatusCodes;
 
 export const DEFAULT_LIMIT_PRODUCTS_RENDER = 10;
 
 export enum SortProduct {
     NAME = 1, VIEWS = 2, CREATED_DATE = 3
 }
+
+const planDao = new PlanDao();
 
 export class SearchProductCriteria {
     name?: string;
@@ -182,6 +186,20 @@ CREATE (p)-[:BELONGED_TO]->(c)
         });
 
         return products;
+    }
+
+    public async addFromPlan(planId: string, product: Product) {
+        const plan = await planDao.getById(planId) as any;
+
+        if (plan.owner._id != product.owner) {
+            throw new ResponseError(ErrorMessages.PERMISSTION_DENIED, FORBIDDEN);
+        }
+        plan.expired = true;
+        plan.status = PlanStatus.HARVEST;
+        await plan.save();
+
+        const result = await this.add(product);
+        return result;
     }
 }
 

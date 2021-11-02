@@ -22,7 +22,7 @@ export async function add(req: Request, res: Response) {
 
     const result = await planDao.add(planRequest);
     const planToAttrconverter = new PlanToAttributeConverter(result);
-   
+
     const newPost = {
         content: `${authUser.lastName} vừa đăng một kế hoạch sản xuất mới.`,
         images: [],
@@ -48,9 +48,8 @@ export async function remove(req: Request, res: Response) {
 }
 
 export async function search(req: Request, res: Response): Promise<Response> {
-    const { owner, from, to, expired } = req.query;
+    const { owner, from, to, expired, status } = req.query;
     const criteria = new SearchPlanCriteria();
-    criteria.expired = false;
     if (owner) {
         criteria.owner = owner as string;
     }
@@ -62,6 +61,11 @@ export async function search(req: Request, res: Response): Promise<Response> {
     }
     if (expired == "1") {
         criteria.expired = true;
+    } else if (expired == "0") {
+        criteria.expired = false;
+    }
+    if (status) {
+        criteria.status = status as string;
     }
 
     const result = await planDao.search(criteria);

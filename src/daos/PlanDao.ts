@@ -1,5 +1,5 @@
 import ErrorMessages from "@constant/errors";
-import PlanModel, { Plan } from "@entities/Plan";
+import PlanModel, { Plan, PlanStatus } from "@entities/Plan";
 import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
 import { FilterQuery, Types } from "mongoose";
@@ -10,6 +10,7 @@ export class SearchPlanCriteria {
     owner?: string;
     from?: Date;
     to?: Date;
+    status?: string;
 
     constructor() {
 
@@ -17,13 +18,14 @@ export class SearchPlanCriteria {
 
     public toQuery(): FilterQuery<Plan> {
         let result = {
-            expired: false
         } as any;
-        if (this.expired) {
-            result.expire = this.expired;
+        if (this.expired === true) {
+            result.expired = true;
+        } else if (this.expired === false) {
+            result.expired = false;
         }
         if (this.owner) {
-            result.owner = Types.ObjectId(this.owner);
+            result.owner = this.owner;
         }
         if (this.from) {
             result.from = {
@@ -34,6 +36,9 @@ export class SearchPlanCriteria {
             result.to = {
                 $lte: this.to
             }
+        }
+        if (this.status) {
+            result.status = this.status;
         }
 
         return result;
@@ -61,6 +66,7 @@ export default class PlanDao {
 
     public async search(criteria: SearchPlanCriteria): Promise<Plan[]> {
         const query = criteria.toQuery();
+        console.log(query)
         const result = await PlanModel.find(query);
 
         return result;
@@ -68,8 +74,8 @@ export default class PlanDao {
 
     public async getById(id: string) {
         const plan = await PlanModel.findById(id)
-        .populate({ path: 'owner', select: 'firstName lastName avatar' })
-        .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+            .populate({ path: 'owner', select: 'firstName lastName avatar' })
+            .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
         return plan;
     }
 }
