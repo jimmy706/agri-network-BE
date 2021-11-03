@@ -6,12 +6,12 @@ import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
 import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
 import PlanDao from "./PlanDao";
-const {  NOT_FOUND, FORBIDDEN } = StatusCodes;
+const { NOT_FOUND, FORBIDDEN } = StatusCodes;
 
 export const DEFAULT_LIMIT_PRODUCTS_RENDER = 10;
 
 export enum SortProduct {
-    NAME = 1, VIEWS = 2, CREATED_DATE = 3
+    NAME = 1, VIEWS = 2, CREATED_DATE = 3, PRICE = 4
 }
 
 const planDao = new PlanDao();
@@ -61,11 +61,13 @@ export class SearchProductCriteria {
     public getSort() {
         switch (this.sort) {
             case SortProduct.CREATED_DATE:
-                return { createdDate: -1 }
+                return { createdDate: -1 };
             case SortProduct.NAME:
-                return { name: 1 }
+                return { name: 1 };
             case SortProduct.VIEWS:
-                return { numberOfViews: -1 }
+                return { numberOfViews: -1 };
+            case SortProduct.PRICE:
+                return { price: -1 };
             default:
                 return { name: 1 }
         }

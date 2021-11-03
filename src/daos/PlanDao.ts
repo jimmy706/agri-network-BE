@@ -66,7 +66,6 @@ export default class PlanDao {
 
     public async search(criteria: SearchPlanCriteria): Promise<Plan[]> {
         const query = criteria.toQuery();
-        console.log(query)
         const result = await PlanModel.find(query);
 
         return result;

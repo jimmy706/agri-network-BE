@@ -8,7 +8,7 @@ import PostDao from '@daos/PostDao';
 import { PostFormat } from '@entities/Post';
 import Attribute from '@entities/Attribute';
 
-const { OK, CREATED, NOT_FOUND, UNAUTHORIZED, BAD_REQUEST, } = StatusCodes;
+const { OK, CREATED, NOT_FOUND, BAD_REQUEST, } = StatusCodes;
 
 const productDao = new ProductDao();
 const postDao = new PostDao();
@@ -21,6 +21,8 @@ function toSortProduct(n: number) {
             return SortProduct.VIEWS;
         case 3:
             return SortProduct.CREATED_DATE;
+        case 4:
+            return SortProduct.PRICE;    
         default:
             return SortProduct.NAME;
     }
