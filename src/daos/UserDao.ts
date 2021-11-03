@@ -15,6 +15,7 @@ import { FilterQuery } from 'mongoose';
 import PaginationHandler from '@utils/PaginationHandler';
 
 export const DEFAULT_LIMIT_USERS_RENDER = 12;
+export const MAX_FRIENDS = 5000;
 const firebaseDao = new FirebaseDao();
 
 export interface CountFollowingsAndFollowers {
@@ -66,7 +67,8 @@ class UserDao {
 
     public async getOneById(currentLoginUserId: string, id: string): Promise<UserDetail> {
         const user = await UserModel.findById(id).orFail(new Error(ErrorMessages.USER_NOT_FOUND));
-        const follow = await FollowModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
+        const follow = await FollowModel.findOne({ owner: id })
+            .orFail(new Error(ErrorMessages.NOT_FOUND));
         const friendObj = await FriendModel.findOne({ owner: id }).orFail(new Error(ErrorMessages.NOT_FOUND));
         const currentLoginUserFriendObj = await FriendModel.findOne({ owner: currentLoginUserId }).orFail(new Error(ErrorMessages.NOT_FOUND));
 

@@ -4,7 +4,7 @@ import PostCommentModel, { Comment } from "@entities/PostComment";
 import PostReactionModel from "@entities/PostReaction";
 import { User } from "@entities/User";
 import { PaginateOptions, PaginateResult } from "mongoose";
-import UserDao from "./UserDao";
+import UserDao, { MAX_FRIENDS } from "./UserDao";
 
 
 export const DEFAULT_LIMIT_POST = 6;
@@ -154,7 +154,7 @@ export default class PostDao {
             populate: { path: 'postedBy', select: 'firstName lastName avatar ' },
         }
 
-        const followers: User[] = await userDao.getFollowings(userId);
+        const followers: User[] = await userDao.getFollowings(userId, 1, MAX_FRIENDS);
         const followerIdsSet: Set<string> = new Set(followers.map(u => u._id));
         followerIdsSet.add(userId);
 
