@@ -46,16 +46,11 @@ export default class PostDao {
         const isLiked = postReactions.reactions.findIndex(r => r.owner == userId) > -1;
 
         return {
-            content: post.content,
-            _id: post._id,
-            postedBy: post.postedBy,
-            createdDate: post.createdDate,
-            images: post.images,
+            isLiked,
             numberOfReactions: postReactions.reactions.length,
             numberOfComments: postComments.comments.length,
             comments: postComments.comments,
-            isLiked,
-            tags: post.tags
+            ...post.toObject()
         };
     }
 
