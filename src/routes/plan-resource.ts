@@ -1,6 +1,5 @@
 import PlanDao, { SearchPlanCriteria } from "@daos/PlanDao";
 import PostDao from "@daos/PostDao";
-import Attribute from "@entities/Attribute";
 import { Plan } from "@entities/Plan";
 import { PostFormat } from "@entities/Post";
 import { User } from "@entities/User";

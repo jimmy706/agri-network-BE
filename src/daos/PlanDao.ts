@@ -1,9 +1,9 @@
 import ErrorMessages from "@constant/errors";
-import PlanModel, { Plan, PlanStatus } from "@entities/Plan";
+import PlanModel, { Plan } from "@entities/Plan";
 import PlanSampleModel, { PlanSample } from "@entities/PlanSample";
 import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
-import { FilterQuery, Types } from "mongoose";
+import { FilterQuery } from "mongoose";
 const { FORBIDDEN, NOT_FOUND } = StatusCodes;
 
 export class SearchPlanCriteria {
