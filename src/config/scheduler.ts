@@ -2,6 +2,7 @@ import InterestDao from "@daos/InterestDao";
 import PlanDao, { SearchPlanCriteria } from "@daos/PlanDao";
 import { Topics } from "@entities/Interest";
 import { Plan, PlanStatus } from "@entities/Plan";
+import PostModel from "@entities/Post";
 import logger from "@shared/Logger";
 import NeededFactorsConverter from "@utils/NeededFactorsConverter";
 
@@ -15,6 +16,7 @@ const inerestDao = new InterestDao();
 class Scheduler {
     public async runScheduleTasks() {
         await this.fetchPlans();
+        await this.fetchSchedulePosts();
     }
 
     private async fetchPlans() {
@@ -70,6 +72,23 @@ class Scheduler {
         if (currentProgress != plan.progress) {
             plan.progress = currentProgress;
             await plan.save();
+        }
+    }
+
+    private async fetchSchedulePosts() {
+        const posts = await PostModel.find({
+            isPublic: false
+        });
+        if (posts.length > 0) {
+            logger.info(`Found ${posts.length} posts on schedule`);
+            const now = new Date();
+            for (let post of posts) {
+                const { schedulePublicDate } = post;
+                if (schedulePublicDate && now >= schedulePublicDate) {
+                    post.isPublic = true;
+                    await post.save();
+                }
+            }
         }
     }
 }

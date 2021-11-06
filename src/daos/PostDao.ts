@@ -158,7 +158,8 @@ export default class PostDao {
             PostModel.paginate({
                 postedBy: {
                     $in: followerIds
-                }
+                },
+                isPublic: true
             }, paginateOptions, (error, result) => {
                 if (error)
                     reject(error);

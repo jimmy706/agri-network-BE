@@ -14,7 +14,7 @@ export interface Needed {
     priceRange: number[]
 }
 
-const NeededSchema = new Schema<Needed>({
+export const NeededSchema = new Schema<Needed>({
     name: String,
     categories: {
         type: [Schema.Types.ObjectId],

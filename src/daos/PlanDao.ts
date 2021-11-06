@@ -1,5 +1,6 @@
 import ErrorMessages from "@constant/errors";
 import PlanModel, { Plan, PlanStatus } from "@entities/Plan";
+import PlanSampleModel, { PlanSample } from "@entities/PlanSample";
 import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
 import { FilterQuery, Types } from "mongoose";
@@ -66,7 +67,7 @@ export default class PlanDao {
 
     public async search(criteria: SearchPlanCriteria): Promise<Plan[]> {
         const query = criteria.toQuery();
-        const result = await PlanModel.find(query);
+        const result = await PlanModel.find(query).sort({from: -1});
 
         return result;
     }
@@ -76,5 +77,23 @@ export default class PlanDao {
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
             .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
         return plan;
+    }
+
+    public async getPlanSamples() {
+        const planSamples = await PlanSampleModel.find({});
+
+        return planSamples;
+    }
+
+    public async addNewPlanSample(planSample: PlanSample) {
+        const newPlanSample = new PlanSampleModel(planSample);
+        await newPlanSample.save();
+        return newPlanSample;
+    }
+
+    public async getPlanSampleById(id: string): Promise<PlanSample> {
+        const planSample = await PlanSampleModel.findById(id).orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+
+        return planSample;
     }
 }

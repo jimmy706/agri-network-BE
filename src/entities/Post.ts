@@ -20,6 +20,8 @@ export interface Post extends Document {
     images: string[];
     tags: string[];
     attributes?: Attribute[];
+    isPublic?: boolean;
+    schedulePublicDate?: Date | null;
 }
 
 
@@ -62,7 +64,15 @@ export const PostSchema = new Schema<Post>({
         require: false
     },
     images: [String],
-    tags: [String]
+    tags: [String],
+    isPublic: {
+        type: Boolean,
+        default: true
+    },
+    schedulePublicDate: {
+        type: Date,
+        require: false,
+    }
 });
 
 PostSchema.plugin(mongoosePaginate);

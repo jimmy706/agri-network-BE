@@ -2,6 +2,7 @@ import cookieParser from 'cookie-parser';
 import morgan from 'morgan';
 import helmet from 'helmet';
 
+
 import express, { NextFunction, Request, Response } from 'express';
 import StatusCodes from 'http-status-codes';
 import 'express-async-errors';
@@ -10,6 +11,8 @@ import BaseRouter from './routes';
 import logger from '@shared/Logger';
 
 import mongoose from 'mongoose';
+const cors = require('cors')
+
 const app = express();
 const { INTERNAL_SERVER_ERROR } = StatusCodes;
 
@@ -18,7 +21,7 @@ const { INTERNAL_SERVER_ERROR } = StatusCodes;
 /************************************************************************************
  *                              Set basic express settings
  ***********************************************************************************/
-
+app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());

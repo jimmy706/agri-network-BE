@@ -27,7 +27,7 @@ export interface Plan extends Document {
     status: PlanStatus;
 }
 
-const HarvestProductSchema = new Schema<HarvestProduct>({
+export const HarvestProductSchema = new Schema<HarvestProduct>({
     name: {
         type: String,
         require: true
