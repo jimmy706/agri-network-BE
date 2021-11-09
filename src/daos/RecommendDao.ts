@@ -274,15 +274,31 @@ class RecommendDao {
     }
 
     private getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any, currentUserId: string): User[] {
-        const result: User[] = [];
+        const pickedUsers: User[] = [];
         for (let interest of interests) {
             const attributes = new AttributeConverter(interest.attributes).toMap();
             if (this.isAttributeMatchedWithProvideProductRage(providedRange, attributes)) {
-                result.push(interest.user);
+                pickedUsers.push(interest.user);
+            }
+        }
+        const whiteList = new Set<string>();
+        whiteList.add(currentUserId);
+        for (let user of pickedUsers) {
+            if (!whiteList.has(user._id)) {
+                whiteList.add(user._id);
             }
         }
 
-        return result.filter(u => u._id != currentUserId);
+        // Filter duplicated users
+        const result: User[] = [];
+        for (let i = 0; i < whiteList.size; i++) {
+            const user = pickedUsers[i];
+            if (whiteList.has(user._id)) {
+                result.push(user);
+            }
+        }
+
+        return result;
     }
 
     private isAttributeMatchedWithProvideProductRage(providedRange: ProvideProductRange, attributes: Map<string, string>): boolean {
