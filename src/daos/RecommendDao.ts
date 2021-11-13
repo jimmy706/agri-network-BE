@@ -12,6 +12,7 @@ import { Result } from "neo4j-driver-core";
 import InterestDao, { SearchInterestCriteria } from "./InterestDao";
 import ProductDao, { DEFAULT_LIMIT_PRODUCTS_RENDER, SearchProductCriteria, SortProduct } from "./ProductDao";
 import UserDao, { DEFAULT_LIMIT_USERS_RENDER, SearchUserCriteria } from "./UserDao";
+import InterestTopic from '@entities/InterestTopic';
 
 const DECLINE_POINT = 2;
 
@@ -197,7 +198,6 @@ class RecommendDao {
                 const category = attributes.get('category') as string;
                 searchProductCriteria.categories = [category];
             }
-
             const result = await this.productDao.search(searchProductCriteria);
             return result.docs.filter(p => p.owner != userId);
         }
@@ -237,9 +237,12 @@ class RecommendDao {
                     $lte: now,
                 },
             })
-            .populate({ path: 'user', select: 'firstName lastName avatar phoneNumber location' });
+            .sort({ createdDate: -1 })
+            .populate({ path: 'user', select: 'firstName lastName avatar phoneNumber location' })
+            .limit(12);
 
-        return this.getUsersMatchProvidedRage(productProvideInfo, interests, userId);
+        const result = await this.getUsersMatchProvidedRage(productProvideInfo, interests, userId);
+        return result;
     }
 
     private getProductProvideRange(products: Product[]): ProvideProductRange {
@@ -273,32 +276,50 @@ class RecommendDao {
         return productProvideInfo;
     }
 
-    private getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any, currentUserId: string): User[] {
-        const pickedUsers: User[] = [];
+    private async getUsersMatchProvidedRage(providedRange: ProvideProductRange, interests: any, currentUserId: string): Promise<InterestTopic[]> {
+        const pickedUsers: InterestTopic[] = [];
         for (let interest of interests) {
             const attributes = new AttributeConverter(interest.attributes).toMap();
             if (this.isAttributeMatchedWithProvideProductRage(providedRange, attributes)) {
-                pickedUsers.push(interest.user);
-            }
-        }
-        const whiteList = new Set<string>();
-        whiteList.add(currentUserId);
-        for (let user of pickedUsers) {
-            if (!whiteList.has(user._id)) {
-                whiteList.add(user._id);
-            }
-        }
-
-        // Filter duplicated users
-        const result: User[] = [];
-        for (let i = 0; i < whiteList.size; i++) {
-            const user = pickedUsers[i];
-            if (whiteList.has(user._id)) {
-                result.push(user);
+                const indexPickedUser = pickedUsers.findIndex(topic => String(topic.user._id) == String(interest.user._id) && String(interest.user_id) != currentUserId);
+                if (indexPickedUser == -1) {
+                    const interestTopic: InterestTopic = {
+                        name: attributes.get('name') || '',
+                        createdDate: interest.createdDate,
+                        user: interest.user
+                    }
+                    pickedUsers.push(interestTopic);
+                }
             }
         }
 
+        const result = await this.sortRecommendedUserOnDemand(pickedUsers, currentUserId);
         return result;
+    }
+
+    private async sortRecommendedUserOnDemand(interestTopics: InterestTopic[], currentUserId: string): Promise<InterestTopic[]> {
+        const currentUser = await this.userDao.getById(currentUserId);
+
+        const locationHandler = LocationHandler.getInstance();
+        return interestTopics.sort((t1, t2) => {
+            t1.distance = -1;
+            t2.distance = -1;
+
+            const l1 = t1.user.location;
+            const l2 = t2.user.location;
+
+            if (locationHandler.isLocationValid(l1) && locationHandler.isLocationValid(l2) && locationHandler.isLocationValid(currentUser.location)) {
+                const d1 = locationHandler.getDistance(currentUser.location, l1);
+                const d2 = locationHandler.getDistance(currentUser.location, l2);
+
+                t1.distance = d1;
+                t2.distance = d2;
+
+                return d1 - d2;
+            }
+
+            return 0;
+        });        
     }
 
     private isAttributeMatchedWithProvideProductRage(providedRange: ProvideProductRange, attributes: Map<string, string>): boolean {
@@ -319,8 +340,8 @@ class RecommendDao {
     }
 
     private sortRecommendUser(arr: RecommendUser[], currentUser: User): RecommendUser[] {
-        return arr.sort((u1, u2) => {
-            const locationHandler = LocationHandler.getInstance();
+        const locationHandler = LocationHandler.getInstance();
+        return arr.sort((u1, u2) => {           
             u1.distance = -1;
             u2.distance = -1;
 
