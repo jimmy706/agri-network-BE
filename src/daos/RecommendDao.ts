@@ -239,7 +239,7 @@ class RecommendDao {
             })
             .sort({ createdDate: -1 })
             .populate({ path: 'user', select: 'firstName lastName avatar phoneNumber location' })
-            .limit(12);
+            .limit(30);
 
         const result = await this.getUsersMatchProvidedRage(productProvideInfo, interests, userId);
         return result;
