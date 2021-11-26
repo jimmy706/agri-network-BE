@@ -104,7 +104,7 @@ class RecommendDao {
 
     public async getRecommendedProductsFromFriends(userId: string): Promise<Product[]> {
         const queryString = `MATCH (u:User{uid: $uid})<-[:FRIENDED]-(friends)-[:PROVIDED]->(p:Product) 
-        RETURN p.id, friends.uid ORDER BY p.createdDate LIMIT ${DEFAULT_LIMIT_PRODUCTS_RENDER}`;
+        RETURN p.id, friends.uid ORDER BY -p.createdDate LIMIT ${DEFAULT_LIMIT_PRODUCTS_RENDER}`;
         const queryParams = {
             uid: userId
         }
@@ -127,7 +127,7 @@ class RecommendDao {
             _id: {
                 $in: productIds
             }
-        });
+        }).sort({createdDate: -1});
 
         return products;
     }
