@@ -92,7 +92,9 @@ export default class PlanDao {
     }
 
     public async getPlanSampleById(id: string): Promise<PlanSample> {
-        const planSample = await PlanSampleModel.findById(id).orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+        const planSample = await PlanSampleModel.findById(id)
+        .populate({path: 'sampleResults', select: 'name _id thumbnails'})
+        .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
 
         return planSample;
     }

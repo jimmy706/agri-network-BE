@@ -333,9 +333,11 @@ class RecommendDao {
         const name = attributes.get('name') as string;
         const cateory = attributes.get('category') as string;
         const priceFrom = parseFloat(attributes.get('priceFrom') as string);
-        const check = names.some(prodName => prodName.toLowerCase().trim().includes(name.toLowerCase()))
-            && priceFrom >= priceRage[0]
+        let check = names.some(prodName => prodName.toLowerCase().trim().includes(name.toLowerCase()))            
             && categories.includes(cateory);
+        if (priceFrom) {
+            check = check && priceFrom >= priceRage[0];
+        }
         return check;
     }
 

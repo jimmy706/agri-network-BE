@@ -16,6 +16,7 @@ export default class PlanSampleConverter {
         result.from = startPlanDate;
         result.to = new Date(startPlanDate.getTime() + this.planSample.tookTime);
         result.result = this.planSample.result;
+        result.sampleResults = this.planSample.sampleResults;
 
         const planDetails: PlanDetail[] = [];
         let startDate = startPlanDate;

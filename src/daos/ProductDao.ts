@@ -2,6 +2,7 @@ import { runNeo4jQuery } from "@config/neo4j";
 import ErrorMessages from "@constant/errors";
 import { PlanStatus } from "@entities/Plan";
 import ProductModel, { Product } from "@entities/product/Product";
+import SampleProductModel, { SampleProduct } from "@entities/product/SampleProduct";
 import ResponseError from "@entities/ResponseError";
 import StatusCodes from 'http-status-codes';
 import { FilterQuery, PaginateOptions, PaginateResult, Types } from "mongoose";
@@ -202,6 +203,17 @@ CREATE (p)-[:BELONGED_TO]->(c)
 
         const result = await this.add(product);
         return result;
+    }
+
+    public async addSample(productSample: SampleProduct) {
+        const newProductSample = new SampleProductModel(productSample);
+        await newProductSample.save();
+        return newProductSample;
+    }
+
+    public async getSamples() {
+        const samples = await SampleProductModel.find({});
+        return samples;
     }
 }
 

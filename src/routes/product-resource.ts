@@ -143,3 +143,13 @@ export async function search(req: Request, res: Response): Promise<Response> {
         return res.status(BAD_REQUEST).json(error);
     }
 }
+
+export async function addSample(req: Request, res: Response): Promise<Response> {
+    const newSample = await productDao.addSample(req.body);
+    return res.status(OK).json(newSample);
+}
+
+export async function getSamples(req: Request, res: Response) {
+    const samples = await productDao.getSamples();
+    return res.status(OK).json(samples);
+}

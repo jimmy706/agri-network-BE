@@ -1,6 +1,6 @@
 import { model, Schema } from 'mongoose';
 import { HarvestProduct, HarvestProductSchema } from './Plan';
-import { Needed, NeededSchema, PlanDetail } from './PlanDetail';
+import { Needed, NeededSchema } from './PlanDetail';
 
 export interface PlanSample {
     _id: string;
@@ -8,6 +8,7 @@ export interface PlanSample {
     name: string;
     plantDetails: PlanSampleStep[];
     result: HarvestProduct;
+    sampleResults: string[];
 };
 
 export interface PlanSampleStep {
@@ -47,6 +48,12 @@ export const PlanSampleSchema = new Schema<PlanSample>({
         type: HarvestProductSchema,
         require: true
     },
+    sampleResults: {
+        type: [Schema.Types.ObjectId],
+        require: false,
+        default: [],
+        ref: 'SampleProduct'
+    }
 });
 
 const PlanSampleModel = model<PlanSample>('PlanSample', PlanSampleSchema);

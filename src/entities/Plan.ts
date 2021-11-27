@@ -25,6 +25,7 @@ export interface Plan extends Document {
     result: HarvestProduct;
     progress: number;
     status: PlanStatus;
+    sampleResults: string[];
 }
 
 export const HarvestProductSchema = new Schema<HarvestProduct>({
@@ -92,6 +93,12 @@ export const PlanSchema = new Schema<Plan>({
             PlanStatus.EXPIRED,
             PlanStatus.HARVEST
         ]
+    }, 
+    sampleResults: {
+        type: [Schema.Types.ObjectId],
+        require: false,
+        default: [],
+        ref: 'SampleProduct'
     }
 });
 
