@@ -41,7 +41,7 @@ export const ProductSchema = new Schema<Product>({
     price: {
         type: Number,
         require: true,
-        default: 1000
+        default: 0
     },
     categories: {
         type: [{

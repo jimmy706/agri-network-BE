@@ -67,7 +67,9 @@ export default class PlanDao {
 
     public async search(criteria: SearchPlanCriteria): Promise<Plan[]> {
         const query = criteria.toQuery();
-        const result = await PlanModel.find(query).sort({from: -1});
+        const result = await PlanModel.find(query)
+        .populate('sampleResults')
+        .sort({ from: -1 });
 
         return result;
     }
@@ -75,6 +77,7 @@ export default class PlanDao {
     public async getById(id: string) {
         const plan = await PlanModel.findById(id)
             .populate({ path: 'owner', select: 'firstName lastName avatar' })
+            .populate('sampleResults')
             .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
         return plan;
     }
@@ -93,8 +96,8 @@ export default class PlanDao {
 
     public async getPlanSampleById(id: string): Promise<PlanSample> {
         const planSample = await PlanSampleModel.findById(id)
-        .populate({path: 'sampleResults', select: 'name _id thumbnails'})
-        .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+            .populate({ path: 'sampleResults', select: 'name _id thumbnails' })
+            .orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
 
         return planSample;
     }

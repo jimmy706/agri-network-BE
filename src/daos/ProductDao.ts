@@ -215,6 +215,11 @@ CREATE (p)-[:BELONGED_TO]->(c)
         const samples = await SampleProductModel.find({});
         return samples;
     }
+
+    public async getSampleById(id: string): Promise<SampleProduct> {
+        const result = await SampleProductModel.findById(id).orFail(new ResponseError(ErrorMessages.NOT_FOUND, NOT_FOUND));
+        return result;
+    }
 }
 
 export default ProductDao;

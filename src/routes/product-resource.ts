@@ -7,6 +7,8 @@ import { Product } from '@entities/product/Product';
 import PostDao from '@daos/PostDao';
 import { PostFormat } from '@entities/Post';
 import Attribute from '@entities/Attribute';
+import AuthChecker from '@utils/AuthChecker';
+import ProductSampleConverter from '@utils/ProductSampleConverter';
 
 const { OK, CREATED, NOT_FOUND, BAD_REQUEST, } = StatusCodes;
 
@@ -38,6 +40,17 @@ export async function add(req: Request, res: Response): Promise<Response> {
         broadCastProduct(newProduct, authUser);
     }
     return res.status(CREATED).json(newProduct);
+}
+
+export async function addFromSample(req: Request, res: Response): Promise<Response> {
+    const { id } = req.params;
+    const authUser = AuthChecker.getInstance().getCurrentLoginUser(req);
+    const sampleProduct = await productDao.getSampleById(id);
+    const converter = new ProductSampleConverter(sampleProduct);
+
+    const newProduct = converter.toProduct(authUser._id);
+    const result = await productDao.add(newProduct);
+    return res.status(CREATED).json(result);
 }
 
 async function broadCastProduct(newProduct: Product, authUser: User) {

@@ -1,7 +1,7 @@
 import { Product } from "@entities/product/Product";
 import { SampleProduct } from "@entities/product/SampleProduct";
 
-class ProductSampleConverter {
+export default class ProductSampleConverter {
     productSample: SampleProduct;
 
     constructor(productSample: SampleProduct) {

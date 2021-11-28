@@ -191,7 +191,7 @@ class RecommendDao {
                 searchProductCriteria.name = attributes.get('name');
             }
             if (attributes.has('priceFrom') && attributes.has('priceTo')) {
-                searchProductCriteria.priceFrom = parseInt(attributes.get('priceFrom') as string);
+                searchProductCriteria.priceFrom = 0;
                 searchProductCriteria.priceTo = parseInt(attributes.get('priceTo') as string);
             }
             if (attributes.has('category')) {
