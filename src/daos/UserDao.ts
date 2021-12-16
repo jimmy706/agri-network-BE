@@ -236,6 +236,10 @@ class UserDao {
                 uid2: toUser
             }
             await runNeo4jQuery(queryAddFriend, queryParams);
+
+            queryParams.uid1 = toUser;
+            queryParams.uid2 = fromUser;
+            await runNeo4jQuery(queryAddFriend, queryParams);
         }
         else {
             throw new Error(ErrorMessages.ACTION_DISMISS);
