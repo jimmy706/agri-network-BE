@@ -176,7 +176,7 @@ CREATE (p)-[:BELONGED_TO]->(c)
         const paginationOptions: PaginateOptions = {
             page,
             limit,
-            select: 'name price numberOfViews thumbnails owner categories',
+            select: 'name price numberOfViews thumbnails owner categories createdDate',
             sort: criteria.getSort(),
         };
         const products: PaginateResult<Product> = await new Promise((resolve, reject) => {

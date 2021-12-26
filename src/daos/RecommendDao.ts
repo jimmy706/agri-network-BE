@@ -198,6 +198,7 @@ class RecommendDao {
                 const category = attributes.get('category') as string;
                 searchProductCriteria.categories = [category];
             }
+            searchProductCriteria.sort = SortProduct.CREATED_DATE;
             const result = await this.productDao.search(searchProductCriteria);
             return result.docs.filter(p => p.owner != userId);
         }

@@ -392,7 +392,9 @@ class UserDao {
         const { firstName, lastName, location, avatar, province, district, ward } = updatedUser;
         user.firstName = firstName;
         user.lastName = lastName;
-        user.location = location;
+        if (location) {
+            user.location = location;
+        }
         user.avatar = avatar;
         if (user.province != updatedUser.province) {
             const deleteProvinceRelationship = `MATCH (u{uid: $uid})-[r:LIVED_IN]->(p:Province) DELETE r`;
