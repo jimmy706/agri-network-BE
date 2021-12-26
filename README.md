@@ -14,6 +14,9 @@
 
 # Run
 
+## Install
+`npm install`
+
 ## Developer mode
 
 `npm run dev`
